@@ -8,5 +8,6 @@ require (
 	github.com/gorilla/mux v1.6.2
 	github.com/jinzhu/gorm v1.9.10
 	github.com/joho/godotenv v1.3.0
-	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+	github.com/tuneinsight/lattigo/v3 v3.0.2
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 )
