@@ -11,7 +11,7 @@ env:
 jobs:
   golangci:
     name: lint
-    runs-on: [self-hosted, linux, x64, digital-discovery-runner-1]
+     runs-on: ubuntu-latest
     steps:
       - name: Configure git for private modules
         env:
