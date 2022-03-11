@@ -1,0 +1,83 @@
+name: Test Coverage
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  GO111MODULE: on
+
+jobs:
+  test:
+     runs-on: ubuntu-latest
+     steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.14.x
+
+      - name: Checkout Main
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
+      - name: Test Main Branch
+        run: |
+          go test ./... -cover -count=1 -race -coverprofile ../main.out
+
+      - name: Set Main Branch Code Coverage
+        id: codecov-main-branch
+        uses: actions/github-script@v3
+        with:
+          github-token: "${{secrets.GITHUB_TOKEN}}"
+          result-encoding: string
+          script: |
+            try { 
+              const goTool = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/gotool.js`)
+              return await goTool({file: "../main.out"})
+            } catch(error){
+              return "unable to determine code coverage"
+            }
+
+      - name: Checkout PR Branch
+        uses: actions/checkout@v2
+
+      - name: Test PR Branch
+        run: |
+          go test ./... -cover -count=1 -race -coverprofile ../pr.out
+
+      - name: Set PR Branch Code Coverage
+        id: codecov-pr-branch
+        uses: actions/github-script@v3
+        with:
+          github-token: "${{secrets.GITHUB_TOKEN}}"
+          result-encoding: string
+          script: |
+            const goTool = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/gotool.js`)
+            return await goTool({file: "../pr.out"})
+
+      - name: Create Comment
+        uses: actions/github-script@v3
+        env:
+          main_code_cov: ${{steps.codecov-main-branch.outputs.result}}
+          pr_code_cov: ${{steps.codecov-pr-branch.outputs.result}}
+        with:
+          github-token: "${{secrets.GITHUB_TOKEN}}"
+          script: |
+            const runID = ${{github.run_id}}
+            mainCodeCov =  process.env.main_code_cov.replace(/[\n\t\r]/g,"")
+            prCodeCov =  process.env.pr_code_cov.replace(/[\n\t\r]/g,"")
+
+            const body = `
+            ### Test Coverage Result
+            Success! :confetti_ball::confetti_ball::confetti_ball:
+            **Code Coverage**
+            Main: ${mainCodeCov}
+            PR  : ${prCodeCov}
+            Check Detail: [Here](https://github.com/${context.issue.owner}/${context.issue.repo}/actions/runs/${runID})
+            `
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            })
