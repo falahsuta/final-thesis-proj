@@ -10,12 +10,6 @@ jobs:
   test:
      runs-on: ubuntu-latest
     steps:
-      - name: Configure git for private modules
-        env:
-          TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          USER_NAME: ${{ secrets.USER_NAME }}
-        run: git config --global url."https://${USER_NAME}:${TOKEN}@github.com".insteadOf "https://github.com"
-
       - name: Install Go
         uses: actions/setup-go@v2
         with:
@@ -34,7 +28,7 @@ jobs:
         id: codecov-main-branch
         uses: actions/github-script@v3
         with:
-          github-token: ${{secrets.ACCESS_TOKEN}}
+          github-token: "${{secrets.GITHUB_TOKEN}}"
           result-encoding: string
           script: |
             try { 
@@ -55,7 +49,7 @@ jobs:
         id: codecov-pr-branch
         uses: actions/github-script@v3
         with:
-          github-token: ${{secrets.ACCESS_TOKEN}}
+          github-token: "${{secrets.GITHUB_TOKEN}}"
           result-encoding: string
           script: |
             const goTool = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/gotool.js`)
@@ -67,7 +61,7 @@ jobs:
           main_code_cov: ${{steps.codecov-main-branch.outputs.result}}
           pr_code_cov: ${{steps.codecov-pr-branch.outputs.result}}
         with:
-          github-token: ${{secrets.ACCESS_TOKEN}}
+          github-token: "${{secrets.GITHUB_TOKEN}}"
           script: |
             const runID = ${{github.run_id}}
             mainCodeCov =  process.env.main_code_cov.replace(/[\n\t\r]/g,"")

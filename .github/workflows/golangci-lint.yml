@@ -13,11 +13,6 @@ jobs:
     name: lint
      runs-on: ubuntu-latest
     steps:
-      - name: Configure git for private modules
-        env:
-          TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          USER_NAME: ${{ secrets.USER_NAME }}
-        run: git config --global url."https://${USER_NAME}:${TOKEN}@github.com".insteadOf "https://github.com"
       - uses: actions/checkout@v2
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v2
