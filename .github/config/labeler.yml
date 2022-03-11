@@ -1,0 +1,5 @@
+# Add 'digital-discovery' label to any root file changes
+TA-HE:
+  - '**'
+  - '.*'
+  - '.*/**'
