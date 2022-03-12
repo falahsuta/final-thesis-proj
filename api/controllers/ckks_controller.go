@@ -1,11 +1,17 @@
 package controllers
 
 import (
+	"encoding"
+	"encoding/base64"
 	"encoding/json"
 	"finalthesisproject/api/models"
 	"finalthesisproject/api/responses"
+	"fmt"
+	"github.com/tuneinsight/lattigo/v3/ckks"
+	"github.com/tuneinsight/lattigo/v3/rlwe"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 )
 
 func (server *Server) CountQT(w http.ResponseWriter, r *http.Request) {
@@ -16,6 +22,10 @@ func (server *Server) CountQT(w http.ResponseWriter, r *http.Request) {
 	}
 	opsFloat1 := models.OpsFloat1{}
 	err = json.Unmarshal(body, &opsFloat1)
+
+	sk := secrecy()
+	multiConst(sk, opsFloat1.Pt1, opsFloat1.Constant)
+
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
@@ -23,4 +33,86 @@ func (server *Server) CountQT(w http.ResponseWriter, r *http.Request) {
 
 	//w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.URL.Path, post.Constant))
 	responses.JSON(w, http.StatusCreated, opsFloat1)
+}
+
+func secrecy() string {
+	params, err := ckks.NewParametersFromLiteral(ckks.PN14QP438)
+	if err != nil {
+		panic(err)
+	}
+
+	sk := ckks.NewSecretKey(params)
+	skStr := MarshalToBase64String(sk)
+
+	return skStr
+}
+
+func multiConst(skStr string, value float64, constant float64) {
+	paramLogs := 1
+
+	params, err := ckks.NewParametersFromLiteral(ckks.PN14QP438)
+	if err != nil {
+		panic(err)
+	}
+
+	sk := ckks.NewSecretKey(params)
+	_ = UnmarshalFromBase64(sk, skStr)
+
+	kgen := ckks.NewKeyGenerator(params)
+	pk := kgen.GenPublicKey(sk)
+	rlk := kgen.GenRelinearizationKey(sk, 2)
+
+	// Encryptor
+	encryptor := ckks.NewEncryptor(params, pk)
+
+	// Decryptor
+	decryptor := ckks.NewDecryptor(params, sk)
+
+	values := make([]float64, paramLogs)
+	values[0] = value
+
+	encoder := ckks.NewEncoder(params)
+	plaintext := encoder.EncodeNew(values, params.MaxLevel(), params.DefaultScale(), paramLogs)
+
+	var ciphertext *ckks.Ciphertext
+	ciphertext = encryptor.EncryptNew(plaintext)
+
+	// Evaluator
+	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
+
+
+	evaluator.MultByConst(ciphertext, constant, ciphertext)
+
+	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogs)
+	valuesTest := make([]float64, len(tmp))
+
+	for i := range tmp {
+		valuesTest[i] = real(tmp[i])
+	}
+
+	fmt.Println("constant multiplikesyen: ", constant)
+	fmt.Println()
+	fmt.Printf("ValuesTest: %6.10f ...\n", valuesTest[0])
+}
+
+// UnmarshalFromBase64 reads a base-64 string into a unmarshallable type
+func UnmarshalFromBase64(bum encoding.BinaryUnmarshaler, b64string string) error {
+	b, err := base64.StdEncoding.DecodeString(b64string)
+
+	if err != nil {
+		return err
+	}
+	return bum.UnmarshalBinary(b)
+}
+
+// MarshalToBase64String returns serialization of a marshallable type as a base-64-encoded string
+func MarshalToBase64String(bm encoding.BinaryMarshaler) string {
+	if bm == nil || reflect.ValueOf(bm).IsNil() {
+		return "nil"
+	}
+	b, err := bm.MarshalBinary()
+	if err != nil {
+		panic(err)
+	}
+	return base64.StdEncoding.EncodeToString(b)
 }

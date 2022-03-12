@@ -7,3 +7,4 @@ type OpsFloat1 struct {
 	Constant float64 `json:"constant"`
 	CtOut    string  `json:"ciphertextbase64"`
 }
+

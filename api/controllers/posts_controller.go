@@ -10,86 +10,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"finalthesisproject/api/auth"
 	"finalthesisproject/api/models"
 	"finalthesisproject/api/responses"
 	"finalthesisproject/api/utils/formaterror"
-
-
-	"github.com/tuneinsight/lattigo/v3/ckks"
-	"github.com/tuneinsight/lattigo/v3/rlwe"
-
+	"github.com/gorilla/mux"
 )
-
-func california() {
-	var err error
-
-	params, err := ckks.NewParametersFromLiteral(ckks.PN14QP438)
-
-	if err != nil {
-		panic(err)
-	}
-
-	encoder := ckks.NewEncoder(params)
-
-	// Keys
-	kgen := ckks.NewKeyGenerator(params)
-	sk, pk := kgen.GenKeyPair()
-
-	// Relinearization key
-	rlk := kgen.GenRelinearizationKey(sk, 2)
-
-	// Encryptor
-	encryptor := ckks.NewEncryptor(params, pk)
-
-	// Decryptor
-	decryptor := ckks.NewDecryptor(params, sk)
-
-	// Evaluator
-	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
-
-	paramLOGS := 4
-
-	// Values to encrypt
-	values := make([]float64, paramLOGS)
-	values[0] = 3.2
-	values[1] = 6.4
-	values[2] = 7.2
-	values[3] = 9.6
-
-	fmt.Println()
-	fmt.Printf("Values     : %6f %6f %6f %6f ...\n",
-		round(values[0]), round(values[1]), round(values[2]), round(values[3]))
-	fmt.Println()
-
-	plaintext := encoder.EncodeNew(values, params.MaxLevel(), params.DefaultScale(), paramLOGS)
-
-	var ciphertext *ckks.Ciphertext
-	ciphertext = encryptor.EncryptNew(plaintext)
-
-	conustant := 10.0
-
-	evaluator.MultByConst(ciphertext, conustant, ciphertext)
-
-	if err := evaluator.Rescale(ciphertext, params.DefaultScale(), ciphertext); err != nil {
-		panic(err)
-	}
-
-	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLOGS)
-
-	valuesTest := make([]float64, len(tmp))
-	for i := range tmp {
-		valuesTest[i] = real(tmp[i])
-	}
-
-
-	fmt.Println("constant multiplikesyen: ", conustant)
-
-	fmt.Println()
-
-	fmt.Printf("ValuesTest: %6.10f %6.10f %6.10f %6.10f...\n", valuesTest[0], valuesTest[1], valuesTest[2], valuesTest[3])
-}
 
 func (server *Server) CreatePost(w http.ResponseWriter, r *http.Request) {
 
