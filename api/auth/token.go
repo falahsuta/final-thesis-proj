@@ -39,7 +39,7 @@ func TokenValid(r *http.Request) error {
 	}
 	return nil
 }
-
+//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdXRob3JpemVkIjp0cnVlLCJleHAiOjE2NDcyMDA1OTksInVzZXJfaWQiOjN9.W91uwBN_coxL2kD6edzhFl6_nnJbKBu9axGEYUuNeh4
 func ExtractToken(r *http.Request) string {
 	keys := r.URL.Query()
 	token := keys.Get("token")

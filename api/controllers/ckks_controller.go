@@ -8,9 +8,12 @@ import (
 	"finalthesisproject/api/responses"
 	"fmt"
 	"github.com/tuneinsight/lattigo/v3/ckks"
+	"github.com/tuneinsight/lattigo/v3/ring"
 	"github.com/tuneinsight/lattigo/v3/rlwe"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"reflect"
 )
 
@@ -36,7 +39,18 @@ func (server *Server) CountQT(w http.ResponseWriter, r *http.Request) {
 }
 
 func secrecy() string {
-	params, err := ckks.NewParametersFromLiteral(ckks.PN14QP438)
+	c := ckks.ParametersLiteral{
+		LogN:     4,
+		LogSlots: 3,
+		Q: []uint64{0x200000e001, // 37 + 32
+			0x100006001},
+		P:            []uint64{0x3ffffea001}, // 38
+		DefaultScale: 1 << 32,
+		Sigma:        rlwe.DefaultSigma,
+		RingType:     ring.Standard,
+	}
+
+	params, err := ckks.NewParametersFromLiteral(c)
 	if err != nil {
 		panic(err)
 	}
@@ -47,10 +61,23 @@ func secrecy() string {
 	return skStr
 }
 
+
+
 func multiConst(skStr string, value float64, constant float64) {
 	paramLogs := 1
 
-	params, err := ckks.NewParametersFromLiteral(ckks.PN14QP438)
+	c := ckks.ParametersLiteral{
+		LogN:     4,
+		LogSlots: 3,
+		Q: []uint64{0x200000e001, // 37 + 32
+			0x100006001},
+		P:            []uint64{0x3ffffea001}, // 38
+		DefaultScale: 1 << 32,
+		Sigma:        rlwe.DefaultSigma,
+		RingType:     ring.Standard,
+	}
+
+	params, err := ckks.NewParametersFromLiteral(c)
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +87,7 @@ func multiConst(skStr string, value float64, constant float64) {
 
 	kgen := ckks.NewKeyGenerator(params)
 	pk := kgen.GenPublicKey(sk)
-	rlk := kgen.GenRelinearizationKey(sk, 2)
+	rlk := kgen.GenRelinearizationKey(sk, 1)
 
 	// Encryptor
 	encryptor := ckks.NewEncryptor(params, pk)
@@ -82,6 +109,27 @@ func multiConst(skStr string, value float64, constant float64) {
 
 
 	evaluator.MultByConst(ciphertext, constant, ciphertext)
+
+	emp := MarshalToBase64String(ciphertext)
+	fmt.Println(len(emp))
+
+	f, err := os.Create("data3.txt")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer f.Close()
+
+
+	data := []byte(emp)
+
+	_, err2 := f.Write(data)
+
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
 
 	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogs)
 	valuesTest := make([]float64, len(tmp))
