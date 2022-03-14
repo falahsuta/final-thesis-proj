@@ -15,13 +15,23 @@ export const closePost = () => {
 };
 
 export const getCurrentUser = () => async (dispatch) => {
-  const response = await axios.get(
-    "http://localhost:4001/api/users/currentUser",
-    { withCredentials: true }
-  );
+  // const response = await axios.get(
+  //   "http://localhost:4001/api/users/currentUser",
+  //   { withCredentials: true }
+  // );
+  //
+  // console.log(response.data)
+  //
+  // console.log("TEEEESTTTT")
+  let p = Cookies.get('access_token')
+  console.log(p)
 
-  console.log("TEEEESTTTT")
-  dispatch({ type: "FETCH_CURRENTUSER", payload: response.data });
+  if (p) {
+    dispatch({ type: "FETCH_CURRENTUSER", payload: {currentUser: true} });
+  } else {
+    dispatch({ type: "FETCH_CURRENTUSER", payload: {currentUser: null} });
+  }
+
 };
 
 export const signIn = (value) => async (dispatch) => {
@@ -31,10 +41,7 @@ export const signIn = (value) => async (dispatch) => {
   // };
 
   // const [cookies, setCookie] = useCookies(['access_token'])
-  Cookies.set('foo', 'bar')
 
-  let p = Cookies.get('foo')
-  console.log(p)
 
 
   const response = await axios.post(
@@ -46,7 +53,10 @@ export const signIn = (value) => async (dispatch) => {
     // }
   );
 
-  console.log(response.data)
+  // console.log()
+  Cookies.set('access_token', response.data, { expires: 1 })
+  //
+
 
   let expires = new Date()
 
@@ -73,15 +83,16 @@ export const createPost = (value) => async (dispatch) => {
 };
 
 export const signOut = () => async (dispatch) => {
-  const response = await axios.post(
-    "http://localhost:4001/api/users/signout",
-    {},
-    { withCredentials: true }
-  );
+  // const response = await axios.post(
+  //   "http://localhost:4001/api/users/signout",
+  //   {},
+  //   { withCredentials: true }
+  // );
+  Cookies.remove('access_token')
 
   dispatch({
     type: "SIGNOUT_CURRENTUSER",
-    payload: { ...response.data, currentUser: null },
+    payload: { currentUser: null },
   });
 };
 

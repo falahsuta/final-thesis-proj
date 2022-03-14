@@ -24,6 +24,6 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/posts/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdatePost))).Methods("PUT")
 	s.Router.HandleFunc("/posts/{id}", middlewares.SetMiddlewareAuthentication(s.DeletePost)).Methods("DELETE")
 
-	s.Router.HandleFunc("/ckks", middlewares.SetMiddlewareJSON(s.CountQT)).Methods("POST")
+	s.Router.HandleFunc("/ckks", middlewares.SetMiddlewareJSON(s.CountCP)).Methods("POST")
 
 }
