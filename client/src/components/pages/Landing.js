@@ -29,9 +29,9 @@ export default () => {
           <Header post={headerData} />
         </Box>
       </Container>
-      {/*<PostCreate />*/}
-      {/*<Recommend />*/}
-      {/*{timeline && <Troll2Fetch timeline={timeline} />}*/}
+      <PostCreate />
+      <Recommend />
+      {timeline && <Troll2Fetch timeline={timeline} />}
     </>
   );
 };

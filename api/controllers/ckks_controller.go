@@ -238,7 +238,6 @@ func multiCP(skStr string, value float64, constant float64) {
 		log.Fatal(err2)
 	}
 
-
 	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogs)
 	valuesTest := make([]float64, len(tmp))
 
@@ -249,7 +248,8 @@ func multiCP(skStr string, value float64, constant float64) {
 	fmt.Println("constant multiplikesyen: ", constant)
 	fmt.Println()
 	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
-	fmt.Println("CEPE")
+	//fmt.Println("CEPE")
+	//fmt.Println(int64(5))
 }
 
 
