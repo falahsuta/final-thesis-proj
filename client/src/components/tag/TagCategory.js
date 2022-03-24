@@ -31,6 +31,9 @@ export default React.memo(function DarkRapListItem() {
   const dispatch = useDispatch();
   const avatarStyles = useDynamicAvatarStyles({ size: 70 });
   const [open, setOpen] = useState(false);
+  const tags = useSelector((state) => state.tag);
+
+
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -41,34 +44,9 @@ export default React.memo(function DarkRapListItem() {
   };
   // https://music-artwork.com/wp-content/uploads/2020/06/preview_artwork072.jpg
   // https://music-artwork.com/wp-content/uploads/2018/04/dec110.jpg ==>> rnb
-  const tags = [
-    {
-      name: "Quirk",
-      link:
-        "https://shopage.s3.amazonaws.com/media/f855/580321926366_PEnByxR6Xdn7soyNMiGPG4ZPMng1N4CN4D4XvB7j.jpg",
-      caption: "Most Popular Genre Around",
-    },
-    {
-      name: "Bizzare",
-      link:
-        "https://music-artwork.com/wp-content/uploads/2020/05/preview_artwork55.jpg",
-      caption: "Bizzare Things Around",
-    },
-    {
-      name: "Cool",
-      link:
-        "https://music-artwork.com/wp-content/uploads/2018/04/artwork_music-2.jpg",
-      caption: "The coolest thing you'd find",
-    },
-    {
-      name: "Informative",
-      link:
-        "https://music-artwork.com/wp-content/uploads/2020/05/preview_artwork34-1.jpg",
-      caption: "You'll find it useful",
-    },
-  ];
 
-  const renderTag = tags.map((tag) => {
+
+  const renderTag = tags ? tags.slice(0,4).map((tag) => {
     return (
       <Row mt={1}>
         <Item>
@@ -94,40 +72,45 @@ export default React.memo(function DarkRapListItem() {
         </Info>
       </Row>
     );
-  });
+  }) : undefined;
 
   return (
     <>
-      <Column gap={2}>{renderTag}</Column>
-      <Grid container direction="row" justify="center" alignItems="flex-start">
-        <Column
-          gap={2}
-          style={{
-            marginBottom: "-33px",
-            marginTop: "-38px",
-            cursor: "pointer",
-          }}
-        >
-          <Info useStyles={useD01InfoStyles}>
-            <InfoCaption>
-              <ArrowDropDownRoundedIcon onClick={handleClickOpen} />
-            </InfoCaption>
-          </Info>
-        </Column>
-      </Grid>
-      <Dialog
-        open={open}
-        TransitionComponent={Transition}
-        // keepMounted
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-slide-title"
-        aria-describedby="alert-dialog-slide-description"
-        // fullWidth
-        maxWidth="lg"
-        // PaperComponent={TagAll}
-      >
-        <TagAll />
-      </Dialog>
+        {tags && tags.length > 0 && (
+          <>
+              <Column gap={2}>{renderTag}</Column>
+              <Grid container direction="row" justify="center" alignItems="flex-start">
+                  <Column
+                      gap={2}
+                      style={{
+                          marginBottom: "-33px",
+                          marginTop: "-38px",
+                          cursor: "pointer",
+                      }}
+                  >
+                      <Info useStyles={useD01InfoStyles}>
+                          <InfoCaption>
+                              <ArrowDropDownRoundedIcon onClick={handleClickOpen} />
+                          </InfoCaption>
+                      </Info>
+                  </Column>
+              </Grid>
+              <Dialog
+                  open={open}
+                  TransitionComponent={Transition}
+                  // keepMounted
+                  onClose={handleClose}
+                  aria-labelledby="alert-dialog-slide-title"
+                  aria-describedby="alert-dialog-slide-description"
+                  // fullWidth
+                  maxWidth="lg"
+                  // PaperComponent={TagAll}
+              >
+                  <TagAll />
+              </Dialog>
+          </>
+        )}
+
     </>
   );
 });

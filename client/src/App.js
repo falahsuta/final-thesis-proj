@@ -19,7 +19,7 @@ export default () => {
             <ScrollToTop />
             <Switch>
               <Route exact path="/" component={Landing} />
-              {/*<Route exact path="/tag/:tag" component={TagPage} />*/}
+              <Route exact path="/tag/:tag" component={TagPage} />
             </Switch>
           </Router>
         </DarkMode>

@@ -2,8 +2,9 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"html"
+	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,6 +23,16 @@ type Item struct {
 	Images    pq.StringArray `gorm:"type:text[]" json:"images"`
 }
 
+type Pagination struct {
+	Limit int    `json:"limit"`
+	Page  int    `json:"page"`
+	Sort  string `json:"sort"`
+}
+
+func (p *Item) TableName() string {
+	return "items"
+}
+
 func (p *Item) Prepare() {
 	p.ID = 0
 	p.Title = html.EscapeString(strings.TrimSpace(p.Title))
@@ -32,7 +43,6 @@ func (p *Item) Prepare() {
 }
 
 func (p *Item) Validate() error {
-
 	if p.Title == "" {
 		return errors.New("Required Title")
 	}
@@ -48,7 +58,7 @@ func (p *Item) Validate() error {
 func (p *Item) SaveItem(db *gorm.DB) (*Item, error) {
 	var err error
 	err = db.Debug().Model(&Item{}).Create(&p).Error
-	fmt.Println(p)
+
 	if err != nil {
 		return &Item{}, err
 	}
@@ -68,6 +78,28 @@ func (p *Item) FindAllItems(db *gorm.DB) (*[]Item, error) {
 	if err != nil {
 		return &[]Item{}, err
 	}
+	if len(items) > 0 {
+		for i, _ := range items {
+			err := db.Debug().Model(&User{}).Where("id = ?", items[i].AuthorID).Take(&items[i].Author).Error
+			if err != nil {
+				return &[]Item{}, err
+			}
+		}
+	}
+	return &items, nil
+}
+
+func (p *Item) FindAllItemsWithPaginate(db *gorm.DB, pagination *Pagination) (*[]Item, error) {
+	items := []Item{}
+	offset := (pagination.Page - 1) * pagination.Limit
+	queryBuider := db.Limit(pagination.Limit).Offset(offset).Order(pagination.Sort)
+	result := queryBuider.Model(&Item{}).Find(&items)
+
+	if result.Error != nil {
+		msg := result.Error
+		return nil, msg
+	}
+
 	if len(items) > 0 {
 		for i, _ := range items {
 			err := db.Debug().Model(&User{}).Where("id = ?", items[i].AuthorID).Take(&items[i].Author).Error
@@ -121,4 +153,33 @@ func (p *Item) DeleteAItem(db *gorm.DB, pid uint64, uid uint32) (int64, error) {
 		return 0, db.Error
 	}
 	return db.RowsAffected, nil
+}
+
+func (p *Item) GeneratePaginationFromRequest(r *http.Request) Pagination {
+	// Initializing default
+	limit := 2
+	page := 1
+	sort := "id asc"
+	query := r.URL.Query()
+
+	for key, value := range query {
+		queryValue := value[len(value)-1]
+		switch key {
+		case "limit":
+			limit, _ = strconv.Atoi(queryValue)
+			break
+		case "page":
+			page, _ = strconv.Atoi(queryValue)
+			break
+		case "sort":
+			sort = queryValue
+			break
+
+		}
+	}
+	return Pagination{
+		Limit: limit,
+		Page:  page,
+		Sort:  sort,
+	}
 }

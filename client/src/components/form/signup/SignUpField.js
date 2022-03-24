@@ -53,7 +53,7 @@ const useStyles = makeStyles((theme) => ({
 const FirstStep = ({
   handleNext,
   handleChange,
-  values: { email, password },
+  values: { email, password, nickname },
   filedError,
   isError,
   closeAll,
@@ -63,7 +63,7 @@ const FirstStep = ({
   const user = useSelector((state) => state.user);
   const [error, setError] = useState([]);
   const [showButton, setShowButton] = useState(false);
-  const [success, setSuccess] = useState("SIGN IN");
+  const [success, setSuccess] = useState("SIGN UP");
 
   const classes = useStyles();
   const emailRegex = RegExp(/^[^@]+@[^@]+\.[^@]+$/);
@@ -73,16 +73,27 @@ const FirstStep = ({
   // const [err, setErr] =
 
   const sendToServer = async () => {
+
     const value = {
-      username: email,
+      email,
       password,
+      nickname,
     };
+
+    const createUser = await axios.post(
+        "http://localhost:8080/users",
+        value,
+    )
 
     dispatch(signIn(value))
       .then((action) => {
-        setSuccess("Success Authenticated");
-        dispatch(action);
-        closeAll();
+        setSuccess("Success Signup Authenticated");
+        setTimeout(() => {
+          dispatch(action);
+        }, 1300);
+        // setTimeout(() => {
+        //   // closeAll()
+        // }, 10600);
       })
       .catch((err) => {
         setError(err.response.data.errors);
@@ -123,10 +134,27 @@ const FirstStep = ({
         {/* <Grid item xs={12} sm={12} alignItems="center"> */}
         <div className={classes.typography}>
           <Typography component="h1" variant="h5">
-            Sign in
+            Sign Up
           </Typography>
         </div>
         {/* </Grid> */}
+
+        <Grid item xs={12} sm={12}>
+          <TextField
+              fullWidth
+              // autoComplete="off"
+              label="Nickname"
+              name="nickname"
+              placeholder="Your nickname"
+              type="nickname"
+              defaultValue={nickname}
+              onChange={handleChange("nickname")}
+              margin="normal"
+              error={filedError.nickname !== ""}
+              helperText={filedError.nickname !== "" ? `${filedError.nickname}` : ""}
+              required
+          />
+        </Grid>
 
         <Grid item xs={12} sm={12}>
           <TextField

@@ -20,6 +20,7 @@ import (
 func (server *Server) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
+
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
@@ -56,7 +57,6 @@ func (server *Server) CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) GetPosts(w http.ResponseWriter, r *http.Request) {
-
 	post := models.Post{}
 
 	posts, err := post.FindAllPosts(server.DB)

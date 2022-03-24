@@ -6,12 +6,15 @@ import Select from "@material-ui/core/Select";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import Button from "@material-ui/core/Button";
+import {useSelector} from "react-redux";
+
+import CurrencyTextField from '@unicef/material-ui-currency-textfield'
 
 // Destructure props
 const FirstStep = ({
   handleNext,
   handleChange,
-  values: { title, description, image, tag },
+  values: { title, description, image, tag, price },
   filedError,
   isError,
 }) => {
@@ -24,12 +27,15 @@ const FirstStep = ({
     description.length <= 36 &&
     tag.length > 0 &&
     image.length > 0 &&
+      price.length > 0 &&
     // image.length > 0;
     image.length >= 12;
 
+  const tags = useSelector((state) => state.tag);
+
   return (
     <Fragment>
-      <Grid container spacing={2} noValidate>
+      <Grid container spacing={1} noValidate>
         <Grid item xs={12} sm={12}>
           <TextField
             fullWidth
@@ -74,6 +80,24 @@ const FirstStep = ({
           />
         </Grid>
 
+        <Grid item xs={12} sm={5}>
+          <CurrencyTextField
+              fullWidth
+              label="Price"
+              name="price"
+              placeholder=""
+              defaultValue={price}
+              onChange={handleChange("price")}
+              currencySymbol="Rp"
+              margin="normal"
+              error={filedError.price !== ""}
+              helperText={
+                filedError.price !== "" ? `${filedError.price}` : ""
+              }
+              required
+          />
+        </Grid>
+
         <Grid item xs={12} sm={12}>
           <TextField
             fullWidth
@@ -93,20 +117,29 @@ const FirstStep = ({
           <FormControl fullWidth required margin="normal">
             <InputLabel htmlFor="tag">Tag</InputLabel>
             <Select value={tag} onChange={handleChange("tag")}>
-              <MenuItem value={"Quirk"}>Quirk</MenuItem>
-              <MenuItem value={"Cool"}>Cool</MenuItem>
-              <MenuItem value={"Informative"}>Informative</MenuItem>
-              <MenuItem value={"Tech"}>Tech</MenuItem>
-              <MenuItem value={"Rnb"}>Rnb</MenuItem>
-              <MenuItem value={"Soul"}>Soul</MenuItem>
-              <MenuItem value={"Pop"}>Pop</MenuItem>
-              <MenuItem value={"Study-tips"}>Study-Tips</MenuItem>
+              {tags && tags.length > 0 && (
+                  tags.map(e => {
+                    return (
+                        <>
+                          <MenuItem value={e}>{e.name}</MenuItem>
+                        </>
+                    )
+                  })
+              )}
+              {/*<MenuItem value={"Quirk"}>Quirk</MenuItem>*/}
+              {/*<MenuItem value={"Cool"}>Cool</MenuItem>*/}
+              {/*<MenuItem value={"Informative"}>Informative</MenuItem>*/}
+              {/*<MenuItem value={"Tech"}>Tech</MenuItem>*/}
+              {/*<MenuItem value={"Rnb"}>Rnb</MenuItem>*/}
+              {/*<MenuItem value={"Soul"}>Soul</MenuItem>*/}
+              {/*<MenuItem value={"Pop"}>Pop</MenuItem>*/}
+              {/*<MenuItem value={"Study-tips"}>Study-Tips</MenuItem>*/}
             </Select>
           </FormControl>
         </Grid>
       </Grid>
       <div
-        style={{ display: "flex", marginTop: 50, justifyContent: "flex-end" }}
+        style={{ display: "flex", marginTop: 10, justifyContent: "flex-end" }}
       >
         <Button
           variant="contained"

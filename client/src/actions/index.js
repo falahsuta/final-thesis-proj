@@ -1,7 +1,10 @@
 import axios from "axios";
 import Cookies from 'js-cookie'
 
-
+export const fetchTag = () => async (dispatch) => {
+  const response = await axios.get("http://localhost:8080/tags");
+  dispatch({ type: "FETCH_TAG", payload: response.data });
+};
 
 export const fetchPost = (id) => async (dispatch) => {
   const response = await axios.get(`http://localhost:4002/api/posts/?p=${id}`);
@@ -42,8 +45,6 @@ export const signIn = (value) => async (dispatch) => {
 
   // const [cookies, setCookie] = useCookies(['access_token'])
 
-
-
   const response = await axios.post(
     "http://localhost:8080/login",
     value,
@@ -53,13 +54,8 @@ export const signIn = (value) => async (dispatch) => {
     // }
   );
 
-  // console.log()
   Cookies.set('access_token', response.data, { expires: 1 })
-  //
-
-
   let expires = new Date()
-
 
   expires.setTime(expires.getTime() + (60 * 60 * 24 * 1000))
   // setCookie('access_token', response.data, { path: '/',  expires})

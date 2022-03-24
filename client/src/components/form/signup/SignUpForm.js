@@ -53,7 +53,7 @@ const App = ({ classes, closeAll }) => {
           <LockOutlinedIcon />
         </Avatar> */}
         <Paper className={classes.paper} elevation={0}>
-          <Validation closeAll={closeAll} />
+          <Validation closeAll={closeAll} isSignUp={true} />
         </Paper>
       </main>
     </div>

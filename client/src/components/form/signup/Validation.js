@@ -14,6 +14,7 @@ const StepForm = (props) => {
   const [fields, setFields] = useState({
     email: "",
     password: "",
+    nickname: "",
   });
   // Copy fields as they all have the same name
   const [filedError, setFieldError] = useState({
@@ -38,6 +39,7 @@ const StepForm = (props) => {
     // Handle errors
     const formErrors = { ...filedError };
     const passwordValidate = value.length > 6;
+    const nicknameValidate = value.length > 6;
 
     switch (input) {
       case "email":
@@ -46,10 +48,14 @@ const StepForm = (props) => {
           : "Invalid email address";
         break;
       case "password":
-        // formErrors.email = emailRegex.test(value)
         formErrors.password = passwordValidate
           ? ""
           : "Minimum password allowed is 6 characters";
+        break;
+      case "nickname":
+        formErrors.nickname = nicknameValidate
+            ? ""
+            : "Minimum nickname allowed is 6 characters";
         break;
       default:
         break;

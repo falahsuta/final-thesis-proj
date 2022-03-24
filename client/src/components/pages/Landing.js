@@ -3,11 +3,13 @@ import { Container } from "@material-ui/core";
 import Box from "@material-ui/core/Box";
 import { useSelector, useDispatch } from "react-redux";
 
-import { getFirstPost } from "../../actions";
+import { getFirstPost, fetchTag } from "../../actions";
 import Recommend from "../landing/Recommend";
 import Header from "../header/Header";
 import headerData from "../header/header-data";
 import PostCreate from "../dialog/PostCreate";
+import Troll3Fetch from "../landing/Troll3Fetch";
+
 import Troll2Fetch from "../landing/Troll2Fetch";
 
 export default () => {
@@ -16,6 +18,7 @@ export default () => {
 
   const getRequiredPost = async () => {
     await dispatch(getFirstPost());
+    await dispatch(fetchTag());
   };
 
   if (!timeline) {
@@ -31,7 +34,7 @@ export default () => {
       </Container>
       <PostCreate />
       <Recommend />
-      {timeline && <Troll2Fetch timeline={timeline} />}
+      {timeline && <Troll3Fetch timeline={timeline} />}
     </>
   );
 };

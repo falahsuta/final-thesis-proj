@@ -50,6 +50,30 @@ const timelineReducer = (timeline = null, action) => {
   }
 };
 
+const productReducer = (product = null, action) => {
+  switch (action.type) {
+    case "PRODUCT_TIMELINE":
+      return action.payload;
+    case "CAT_TIMELINE":
+      return action.payload;
+    case "CLOSE_FIRSTPRODUCT":
+      return null;
+    default:
+      return product;
+  }
+};
+
+const tagReducer = (tag = null, action) => {
+  switch (action.type) {
+    case "FETCH_TAG":
+      return action.payload;
+    case "CLOSE_TAG":
+      return null;
+    default:
+      return tag;
+  }
+};
+
 const contribeReducer = (contribe = null, action) => {
   switch (action.type) {
     case "POST_CONTRIBE":
@@ -61,10 +85,14 @@ const contribeReducer = (contribe = null, action) => {
   }
 };
 
+
+
 export default combineReducers({
   post: postReducer,
   user: userReducer,
   show: showReducer,
   timeline: timelineReducer,
   contribe: contribeReducer,
+  product: productReducer,
+  tag: tagReducer,
 });

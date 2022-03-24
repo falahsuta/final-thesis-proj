@@ -54,8 +54,9 @@ func (server *Server) CreateItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
-
 	item := models.Item{}
+
+	//pagination := item.GeneratePaginationFromRequest(r)
 
 	items, err := item.FindAllItems(server.DB)
 	if err != nil {
@@ -64,6 +65,20 @@ func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
 	}
 	responses.JSON(w, http.StatusOK, items)
 }
+
+func (server *Server) GetItemsWithPagination(w http.ResponseWriter, r *http.Request) {
+	item := models.Item{}
+
+	pagination := item.GeneratePaginationFromRequest(r)
+
+	items, err := item.FindAllItemsWithPaginate(server.DB, &pagination)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK, items)
+}
+
 
 func (server *Server) GetItem(w http.ResponseWriter, r *http.Request) {
 

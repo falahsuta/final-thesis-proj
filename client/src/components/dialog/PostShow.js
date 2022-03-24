@@ -16,6 +16,8 @@ import ReplyTag from "../reply/ReplyTag";
 import Comment from "../reply/Comment";
 import ReplyField from "../reply/ReplyField";
 
+import GroupedButtons from "./GroupedButton";
+
 const useStyles = makeStyles({
   root: {
     maxWidth: 625,
@@ -73,48 +75,54 @@ export default (props) => {
                 alignItems="flex-start"
               >
                 {showReply ? (
-                  <ReplyField
-                    postId={props.id}
-                    action={replyTrueIfClicked}
-                    userId={user.currentUser.id}
-                    username={user.currentUser.username.slice(
-                      0,
-                      user.currentUser.username.indexOf("@")
-                    )}
-                  />
+                    <>
+                      <ReplyField
+                        postId={props.id}
+                        action={replyTrueIfClicked}
+                        userId={user.currentUser.id}
+                        username={user.currentUser.username.slice(
+                          0,
+                          user.currentUser.username.indexOf("@")
+                        )}
+                      />
+                    </>
                 ) : (
                   <>
-                    <ReplyTag buttonText="Reply" action={replyTrueIfClicked}>
-                      <ReplyRoundedIcon />
+                    <GroupedButtons />
+
+                    <ReplyTag buttonText="Qty: " action={replyTrueIfClicked}>
+                      {/*<ReplyRoundedIcon />*/}
                     </ReplyTag>
 
-                    <ReplyTag
-                      buttonText={getRandom().toString()}
-                      widthSpec={30}
-                    >
-                      <KeyboardArrowUpOutlinedIcon />
-                    </ReplyTag>
+                    {/*<ReplyTag*/}
+                    {/*  buttonText={getRandom().toString()}*/}
+                    {/*  widthSpec={30}*/}
+                    {/*  // disableRipple={true}*/}
+                    {/*>*/}
+                      {/*<KeyboardArrowUpOutlinedIcon />*/}
+
+                    {/*</ReplyTag>*/}
                   </>
                 )}
               </Grid>
             )}
             <Divider />
-            <br />
+            {/*<br />*/}
 
-            <Typography gutterBottom variant="h6" component="h3">
-              {`${
-                post.comments.length > 0
-                  ? "Comments"
-                  : "Be The First to Comment"
-              }`}
-            </Typography>
+            {/*<Typography gutterBottom variant="h6" component="h3">*/}
+            {/*  {`${*/}
+            {/*    post.comments.length > 0*/}
+            {/*      ? "Comments"*/}
+            {/*      : "Be The First to Comment"*/}
+            {/*  }`}*/}
+            {/*</Typography>*/}
           </Container>
 
-          {post && <Comment comment={post.comments} />}
+          {/*{post && <Comment comment={post.comments} />}*/}
         </CardContent>
       ) : undefined}
 
-      <br />
+      {/*<br />*/}
     </Card>
   );
 };

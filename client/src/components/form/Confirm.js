@@ -27,7 +27,6 @@ const Confirm = ({
       const userId = user.currentUser.id;
       const username = user.currentUser.username;
       const value = {
-        userId,
         title,
         description,
         image,

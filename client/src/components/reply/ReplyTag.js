@@ -7,8 +7,10 @@ export default (props) => {
     <>
       <Button
         // onClick={() => console.log("Clicked")}
-        // disableRipple
-        onClick={() => props.action()}
+        disableRipple
+        disableFocusRipple
+        disableElevation
+        // onClick={() => props.action()}
         color="textSecondary"
         style={{
           borderRadius: "17px",
@@ -16,15 +18,15 @@ export default (props) => {
           textTransform: "none",
           // marginTop: "-2px",
           marginBottom: "10px",
-          marginRight: "5px",
+          marginRight: "-5px",
           height: props.heightSpec ? `${props.heightSpec}px` : undefined,
         }}
       >
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            marginRight: "3px",
+            // display: "flex",
+            // alignItems: "center",
+            // marginRight: "3px",
           }}
         >
           {props.children}
@@ -34,7 +36,7 @@ export default (props) => {
             color="textSecondary"
             component="p"
           >
-            <div style={{ marginTop: "1px", marginLeft: "3px" }}>
+            <div style={{ marginTop: "-2px", marginLeft: "2px" }}>
               {props.buttonText}
             </div>
           </Typography>

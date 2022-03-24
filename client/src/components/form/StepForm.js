@@ -20,6 +20,7 @@ const StepForm = (props) => {
     image: "",
     tag: "",
     content: "",
+    price: ""
   });
   // Copy fields as they all have the same name
   const [filedError, setFieldError] = useState({
@@ -44,9 +45,10 @@ const StepForm = (props) => {
     // Handle errors
     const formErrors = { ...filedError };
     const lengthValidate = value.length > 0 && value.length < 3;
-    const contentValidate = value.length < 100;
-    const titleValidate = value.length < 36 || value.length > 70;
-    const descValidate = value.length < 24 || value.length > 36;
+    const contentValidate = value.length < 10;
+    const titleValidate = value.length < 6 || value.length > 20;
+    const priceValidate = value.length < 6 || value.length > 20;
+    const descValidate = value.length < 8 || value.length > 36;
     const imageLinkValidate = value.length >= 12;
 
     // console.log("form errors");
@@ -55,13 +57,18 @@ const StepForm = (props) => {
     switch (input) {
       case "title":
         formErrors.title = titleValidate
-          ? "Minimum 36 characters and Maximum of 60 characters"
+          ? "Minimum 6 characters and Maximum of 60 characters"
           : "";
         break;
       case "description":
         formErrors.description = descValidate
-          ? "Minimum 24 characters and Maximum of 36 characters"
+          ? "Minimum 8 characters and Maximum of 36 characters"
           : "";
+        break;
+      case "price":
+        formErrors.price = priceValidate
+            ? "Minimum 3 digit price"
+            : "";
         break;
       case "image":
         // formErrors.email = emailRegex.test(value)
@@ -71,7 +78,7 @@ const StepForm = (props) => {
         break;
       case "content":
         formErrors.content = contentValidate
-          ? "Content at least contain 400 characters long"
+          ? "Content at least contain 10 characters long"
           : "";
         break;
       default:
