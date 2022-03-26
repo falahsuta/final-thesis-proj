@@ -7,6 +7,24 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+var discounts = []models.Discount{
+	models.Discount{
+		Name: "DISCOUNT30",
+		PercentCut: 0.3,
+		FixedCut: 4000.00,
+	},
+	models.Discount{
+		Name: "DISCOUNT50",
+		PercentCut: 0.5,
+		FixedCut: 0.0,
+	},
+	models.Discount{
+		Name: "DISCOUNT90",
+		PercentCut: 0.0,
+		FixedCut: 9000.0,
+	},
+}
+
 var users = []models.User{
 	models.User{
 		Nickname: "Steven victor",
@@ -66,26 +84,32 @@ var items = []models.Item{
 	models.Item{
 		Title:   "Title 1",
 		Content: "Hello world 1",
+		Price: 30000.00,
 	},
 	models.Item{
 		Title:   "Title 2",
 		Content: "Hello world 2",
+		Price: 30000.00,
 	},
 	models.Item{
 		Title:   "Title 3",
 		Content: "Hello world 3",
+		Price: 30000.00,
 	},
 	models.Item{
 		Title:   "Title 4",
 		Content: "Hello world 4",
+		Price: 30000.00,
 	},
 	models.Item{
 		Title:   "Title 5",
 		Content: "Hello world 5",
+		Price: 30000.00,
 	},
 	models.Item{
 		Title:   "Title 6",
 		Content: "Hello world 6",
+		Price: 30000.00,
 	},
 }
 
@@ -137,17 +161,15 @@ var tags = []models.Tag{
 		"https://music-artwork.com/wp-content/uploads/2020/06/preview_artwork065.jpg",
 		Capt: "Gets you socialy active",
 	},
-
-
 }
 
 func Load(db *gorm.DB) {
 
-	err := db.Debug().DropTableIfExists(&models.Post{}, &models.User{}, &models.Item{}, &models.Tag{}).Error
+	err := db.Debug().DropTableIfExists(&models.Post{}, &models.User{}, &models.Item{}, &models.Tag{}, &models.Balance{}, &models.Discount{}, &models.Transact{}).Error
 	if err != nil {
 		log.Fatalf("cannot drop table: %v", err)
 	}
-	err = db.Debug().AutoMigrate(&models.User{}, &models.Post{}, &models.Item{}, &models.Tag{}).Error
+	err = db.Debug().AutoMigrate(&models.User{}, &models.Post{}, &models.Item{}, &models.Tag{}, &models.Balance{}, &models.Discount{},&models.Transact{}).Error
 	if err != nil {
 		log.Fatalf("cannot migrate table: %v", err)
 	}
@@ -165,6 +187,15 @@ func Load(db *gorm.DB) {
 			log.Fatalf("cannot seed users table: %v", err)
 		}
 	}
+
+
+	for k, _ := range discounts {
+		err = db.Debug().Model(&models.Discount{}).Create(&discounts[k]).Error
+		if err != nil {
+			log.Fatalf("cannot seed users table: %v", err)
+		}
+	}
+
 
 	for i, _ := range users {
 		err = db.Debug().Model(&models.User{}).Create(&users[i]).Error
@@ -185,4 +216,7 @@ func Load(db *gorm.DB) {
 		}
 
 	}
+
+
+
 }

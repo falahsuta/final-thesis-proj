@@ -61,12 +61,16 @@ func (server *Server) CountCP(w http.ResponseWriter, r *http.Request) {
 
 func secrecy() string {
 	c := ckks.ParametersLiteral{
-		LogN:     4,
-		LogSlots: 3,
-		Q: []uint64{0x200000e001, // 37 + 32
-			0x100006001},
-		P:            []uint64{0x3ffffea001}, // 38
-		DefaultScale: 1 << 32,
+		LogN:     5,
+		LogSlots: 4,
+		Q: []uint64{0x1fffec001, // 33 + 5 x 30
+			0x3fff4001,
+			0x3ffe8001,
+			0x40020001,
+			0x40038001,
+			0x3ffc0001},
+		P:            []uint64{0x800004001}, // 35
+		DefaultScale: 1 << 30,
 		Sigma:        rlwe.DefaultSigma,
 		RingType:     ring.Standard,
 	}
@@ -88,12 +92,16 @@ func multiConst(skStr string, value float64, constant float64) {
 	paramLogs := 1
 
 	c := ckks.ParametersLiteral{
-		LogN:     4,
-		LogSlots: 3,
-		Q: []uint64{0x200000e001, // 37 + 32
-			0x100006001},
-		P:            []uint64{0x3ffffea001}, // 38
-		DefaultScale: 1 << 32,
+		LogN:     5,
+		LogSlots: 4,
+		Q: []uint64{0x1fffec001, // 33 + 5 x 30
+			0x3fff4001,
+			0x3ffe8001,
+			0x40020001,
+			0x40038001,
+			0x3ffc0001},
+		P:            []uint64{0x800004001}, // 35
+		DefaultScale: 1 << 30,
 		Sigma:        rlwe.DefaultSigma,
 		RingType:     ring.Standard,
 	}
@@ -128,13 +136,12 @@ func multiConst(skStr string, value float64, constant float64) {
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
 
-
 	evaluator.MultByConst(ciphertext, constant, ciphertext)
 
 	emp := MarshalToBase64String(ciphertext)
 	fmt.Println(len(emp))
 
-	f, err := os.Create("data3.txt")
+	f, err := os.Create("data4.txt")
 
 	if err != nil {
 		log.Fatal(err)

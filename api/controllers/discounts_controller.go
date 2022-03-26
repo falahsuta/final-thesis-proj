@@ -15,71 +15,54 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (server *Server) CreateItem(w http.ResponseWriter, r *http.Request) {
+func (server *Server) CreateDiscount(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
+
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	item := models.Item{}
-	err = json.Unmarshal(body, &item)
+	discount := models.Discount{}
+	err = json.Unmarshal(body, &discount)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	item.Prepare()
-	err = item.Validate()
+
+	err = discount.Validate()
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	uid, err := auth.ExtractTokenID(r)
+	_, err = auth.ExtractTokenID(r)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
-	if uid != item.AuthorID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
-		return
-	}
-	itemCreated, err := item.SaveItem(server.DB)
+
+	discountCreated, err := discount.SaveItem(server.DB)
 	if err != nil {
 		formattedError := formaterror.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
 	}
-	w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.URL.Path, itemCreated.ID))
-	responses.JSON(w, http.StatusCreated, itemCreated)
+	w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.URL.Path, discountCreated.ID))
+	responses.JSON(w, http.StatusCreated, discountCreated)
 }
 
-func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
-	item := models.Item{}
+func (server *Server) GetDiscounts(w http.ResponseWriter, r *http.Request) {
+	discount := models.Discount{}
 
-	//pagination := item.GeneratePaginationFromRequest(r)
-
-	items, err := item.FindAllItems(server.DB)
+	discounts, err := discount.FindAllItems(server.DB)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	responses.JSON(w, http.StatusOK, items)
+	responses.JSON(w, http.StatusOK, discounts)
 }
 
-func (server *Server) GetItemsWithPagination(w http.ResponseWriter, r *http.Request) {
-	item := models.Item{}
-
-	pagination := item.GeneratePaginationFromRequest(r)
-
-	items, err := item.FindAllItemsWithPaginate(server.DB, &pagination)
-	if err != nil {
-		responses.ERROR(w, http.StatusInternalServerError, err)
-		return
-	}
-	responses.JSON(w, http.StatusOK, items)
-}
-
-func (server *Server) GetItem(w http.ResponseWriter, r *http.Request) {
+func (server *Server) GetDiscount(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 	pid, err := strconv.ParseUint(vars["id"], 10, 64)
@@ -87,17 +70,17 @@ func (server *Server) GetItem(w http.ResponseWriter, r *http.Request) {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
 	}
-	item := models.Item{}
+	discount := models.Discount{}
 
-	itemReceived, err := item.FindItemByID(server.DB, pid)
+	discountReceived, err := discount.FindItemByID(server.DB, pid)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
 	}
-	responses.JSON(w, http.StatusOK, itemReceived)
+	responses.JSON(w, http.StatusOK, discountReceived)
 }
 
-func (server *Server) UpdateItem(w http.ResponseWriter, r *http.Request) {
+func (server *Server) UpdateDiscount(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
@@ -109,25 +92,20 @@ func (server *Server) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//CHeck if the auth token is valid and  get the user id from it
-	uid, err := auth.ExtractTokenID(r)
+	_, err = auth.ExtractTokenID(r)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
 
 	// Check if the post exist
-	item := models.Item{}
-	err = server.DB.Debug().Model(models.Item{}).Where("id = ?", pid).Take(&item).Error
+	discount := models.Discount{}
+	err = server.DB.Debug().Model(models.Discount{}).Where("id = ?", pid).Take(&discount).Error
 	if err != nil {
 		responses.ERROR(w, http.StatusNotFound, errors.New("Post not found"))
 		return
 	}
 
-	// If a user attempt to update a post not belonging to him
-	if uid != item.AuthorID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
-		return
-	}
 	// Read the data posted
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -136,39 +114,33 @@ func (server *Server) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Start processing the request data
-	itemUpdate := models.Item{}
-	err = json.Unmarshal(body, &itemUpdate)
+	discountUpdate := models.Discount{}
+	err = json.Unmarshal(body, &discountUpdate)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
-	//Also check if the request user id is equal to the one gotten from token
-	if uid != itemUpdate.AuthorID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
-		return
-	}
-
-	itemUpdate.Prepare()
-	err = itemUpdate.Validate()
+	discountUpdate.Prepare()
+	err = discountUpdate.Validate()
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
 	}
 
-	itemUpdate.ID = item.ID //this is important to tell the model the post id to update, the other update field are set above
+	discountUpdate.ID = discount.ID //this is important to tell the model the post id to update, the other update field are set above
 
-	itemUpdated, err := itemUpdate.UpdateAnItem(server.DB)
+	discountUpdated, err := discountUpdate.UpdateAnItem(server.DB)
 
 	if err != nil {
 		formattedError := formaterror.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
 		return
 	}
-	responses.JSON(w, http.StatusOK, itemUpdated)
+	responses.JSON(w, http.StatusOK, discountUpdated)
 }
 
-func (server *Server) DeleteItem(w http.ResponseWriter, r *http.Request) {
+func (server *Server) DeleteDiscount(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
 
@@ -180,26 +152,22 @@ func (server *Server) DeleteItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Is this user authenticated?
-	uid, err := auth.ExtractTokenID(r)
+	_, err = auth.ExtractTokenID(r)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
 
 	// Check if the post exist
-	item := models.Item{}
-	err = server.DB.Debug().Model(models.Item{}).Where("id = ?", pid).Take(&item).Error
+	discount := models.Discount{}
+	err = server.DB.Debug().Model(models.Post{}).Where("id = ?", pid).Take(&discount).Error
 	if err != nil {
 		responses.ERROR(w, http.StatusNotFound, errors.New("Unauthorized"))
 		return
 	}
 
-	// Is the authenticated user, the owner of this post?
-	if uid != item.AuthorID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
-		return
-	}
-	_, err = item.DeleteAItem(server.DB, pid, uid)
+
+	_, err = discount.DeleteAItem(server.DB, pid)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return

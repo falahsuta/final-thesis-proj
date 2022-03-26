@@ -38,6 +38,25 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/tags/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateTag))).Methods("PUT")
 	s.Router.HandleFunc("/tags/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteTag)).Methods("DELETE")
 
+	//Balances routes
+	s.Router.HandleFunc("/balances", middlewares.SetMiddlewareJSON(s.GetBalances)).Methods("GET")
+	s.Router.HandleFunc("/mybalances", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.ActivateBalances))).Methods("POST")
+	s.Router.HandleFunc("/mybalances", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetBalance))).Methods("GET")
+
+	//Discounts routes
+	s.Router.HandleFunc("/discounts", middlewares.SetMiddlewareJSON(s.CreateDiscount)).Methods("POST")
+	s.Router.HandleFunc("/discounts", middlewares.SetMiddlewareJSON(s.GetDiscounts)).Methods("GET")
+	s.Router.HandleFunc("/discounts/{id}", middlewares.SetMiddlewareJSON(s.GetDiscount)).Methods("GET")
+	s.Router.HandleFunc("/discounts/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateDiscount))).Methods("PUT")
+	s.Router.HandleFunc("/discounts/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteDiscount)).Methods("DELETE")
+
+	//Transacts routes
+	s.Router.HandleFunc("/transacts", middlewares.SetMiddlewareJSON(s.CreateTransactWithDisc)).Methods("POST")
+	s.Router.HandleFunc("/transacts", middlewares.SetMiddlewareJSON(s.GetTransacts)).Methods("GET")
+	s.Router.HandleFunc("/transacts/{id}", middlewares.SetMiddlewareJSON(s.GetTransact)).Methods("GET")
+	s.Router.HandleFunc("/transacts/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateTransact))).Methods("PUT")
+	s.Router.HandleFunc("/transacts/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteTransact)).Methods("DELETE")
+
 	s.Router.HandleFunc("/ckks", middlewares.SetMiddlewareJSON(s.CountCP)).Methods("POST")
 
 }

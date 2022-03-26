@@ -21,6 +21,10 @@ type Item struct {
 	CreatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 	Images    pq.StringArray `gorm:"type:text[]" json:"images"`
+	Quantity  uint32         `gorm:"type:int" json:"quantity"`
+	TotalSold uint32         `gorm:"type:int" json:"total_sold"`
+	Buyer     pq.StringArray `gorm:"type:text[]" json:"buyer_ids"`
+	Price     float64        `sql:"type:float" json:"price"`
 }
 
 type Pagination struct {

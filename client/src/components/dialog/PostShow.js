@@ -17,6 +17,7 @@ import Comment from "../reply/Comment";
 import ReplyField from "../reply/ReplyField";
 
 import GroupedButtons from "./GroupedButton";
+import ImageList from "./ImageList";
 
 const useStyles = makeStyles({
   root: {
@@ -49,6 +50,9 @@ export default (props) => {
             <Typography gutterBottom variant="h5" component="h2">
               {post ? post.post.title : ""}
             </Typography>
+            <div style={{ marginTop: "10px" }}></div>
+            <ImageList />
+            <div style={{ marginTop: "15px" }}></div>
             <Typography
               variant="body1"
               color="textPrimary"
@@ -57,7 +61,11 @@ export default (props) => {
             >
               {post ? post.post.description : ""}
             </Typography>
+            {/*<div style={{ marginTop: "25px" }}></div>*/}
+            {/*<ImageList />*/}
+            {/*<div style={{ marginTop: "25px" }}></div>*/}
             <div style={{ height: "5px" }}></div>
+
             <Typography
               variant="body2"
               color="textSecondary"
@@ -66,6 +74,7 @@ export default (props) => {
             >
               {post ? post.post.content : ""}
             </Typography>
+
             <br />
             {user && user.currentUser && (
               <Grid
@@ -90,9 +99,9 @@ export default (props) => {
                   <>
                     <GroupedButtons />
 
-                    <ReplyTag buttonText="Qty: " action={replyTrueIfClicked}>
-                      {/*<ReplyRoundedIcon />*/}
-                    </ReplyTag>
+                    {/*<ReplyTag buttonText="" action={replyTrueIfClicked}>*/}
+                    {/*  /!*<ReplyRoundedIcon />*!/*/}
+                    {/*</ReplyTag>*/}
 
                     {/*<ReplyTag*/}
                     {/*  buttonText={getRandom().toString()}*/}
