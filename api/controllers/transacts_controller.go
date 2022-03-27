@@ -46,16 +46,7 @@ func (server *Server) CreateTransactWithDisc(w http.ResponseWriter, r *http.Requ
 	}
 
 	transact.InsertID(uid)
-
 	transactCreated, err := transact.SaveItemWithDisc(server.DB, transactMeta)
-
-	//var transactCreated *models.Transact
-
-	//if transactMeta.DiscName != "" {
-	//	transactCreated, err = transact.SaveItemWithDisc(server.DB, transactMeta)
-	//} else {
-	//	transactCreated, err = transact.SaveItem(server.DB)
-	//}
 
 	if err != nil {
 		formattedError := formaterror.FormatError(err.Error())
@@ -63,10 +54,8 @@ func (server *Server) CreateTransactWithDisc(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-
 	w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.URL.Path, transactCreated.ID))
 	responses.JSON(w, http.StatusCreated, transact)
-
 }
 
 func (server *Server) CreateTransact(w http.ResponseWriter, r *http.Request) {

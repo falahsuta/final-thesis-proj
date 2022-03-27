@@ -40,6 +40,7 @@ func (s *Server) initializeRoutes() {
 
 	//Balances routes
 	s.Router.HandleFunc("/balances", middlewares.SetMiddlewareJSON(s.GetBalances)).Methods("GET")
+	s.Router.HandleFunc("/topup", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.TopupBalances))).Methods("POST")
 	s.Router.HandleFunc("/mybalances", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.ActivateBalances))).Methods("POST")
 	s.Router.HandleFunc("/mybalances", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetBalance))).Methods("GET")
 

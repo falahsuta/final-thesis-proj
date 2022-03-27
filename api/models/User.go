@@ -19,6 +19,7 @@ type User struct {
 	Password  string    `gorm:"size:100;not null;" json:"password"`
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
+	SecretKey string    `gorm:"type:text" json:"secret_key"`
 }
 
 func Hash(password string) ([]byte, error) {
@@ -30,6 +31,8 @@ func VerifyPassword(hashedPassword, password string) error {
 }
 
 func (u *User) BeforeSave() error {
+	u.SecretKey = Secrecy()
+	
 	hashedPassword, err := Hash(u.Password)
 	if err != nil {
 		return err
@@ -133,9 +136,9 @@ func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (*User, error) {
 	}
 	db = db.Debug().Model(&User{}).Where("id = ?", uid).Take(&User{}).UpdateColumns(
 		map[string]interface{}{
-			"password":  u.Password,
-			"nickname":  u.Nickname,
-			"email":     u.Email,
+			"password":   u.Password,
+			"nickname":   u.Nickname,
+			"email":      u.Email,
 			"updated_at": time.Now(),
 		},
 	)

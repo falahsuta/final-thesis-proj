@@ -8,7 +8,6 @@ import (
 	"github.com/tuneinsight/lattigo/v3/ckks"
 	"github.com/tuneinsight/lattigo/v3/ring"
 	"github.com/tuneinsight/lattigo/v3/rlwe"
-	"os"
 	"reflect"
 	"time"
 
@@ -26,9 +25,9 @@ type Transact struct {
 }
 
 type TransactMeta struct {
-	DiscName     string  `gorm:"size:255;not null;" json:"disc_name"`
-	ProductID    uint64  `sql:"type:int REFERENCES items(id)" json:"product_id"`
-	ProductPrice float64 `sql:"type:float" json:"product_price"`
+	DiscName  string `gorm:"size:255;not null;" json:"disc_name"`
+	ProductID uint64 `sql:"type:int REFERENCES items(id)" json:"product_id"`
+	Product   Item
 }
 
 type TransactMetaParams struct {
@@ -54,7 +53,15 @@ func (p *Transact) InsertID(id uint32) {
 }
 
 func (p *Transact) SaveItemWithDisc(db *gorm.DB, meta TransactMeta) (*Transact, error) {
-	//var err error
+	var err error
+
+	user := User{}
+	user.FindUserByID(db, p.AuthorID)
+
+	product := Item{}
+	product.FindItemByID(db, meta.ProductID)
+
+	meta.Product = product
 
 	discount := Discount{}
 	discount.FindItemByName(db, meta.DiscName)
@@ -64,19 +71,22 @@ func (p *Transact) SaveItemWithDisc(db *gorm.DB, meta TransactMeta) (*Transact, 
 		Discount:     discount,
 	}
 
-	p.EncOutputFromMeta(metaParams)
+	buyerMeta, BuyerTotalBill := p.EncOutputFromMeta(metaParams, user.SecretKey)
 
-	//err = db.Debug().Model(&Transact{}).Create(&p).Error
+	p.BuyerMeta = buyerMeta
+	p.BuyerTotalBill = BuyerTotalBill
 
-	//if err != nil {
-	//	return &Transact{}, err
-	//}
-	//if p.ID != 0 {
-	//	err = db.Debug().Model(&User{}).Where("id = ?", p.AuthorID).Take(&p.Author).Error
-	//	if err != nil {
-	//		return &Transact{}, err
-	//	}
-	//}
+	err = db.Debug().Model(&Transact{}).Create(&p).Error
+
+	if err != nil {
+		return &Transact{}, err
+	}
+	if p.ID != 0 {
+		err = db.Debug().Model(&User{}).Where("id = ?", p.AuthorID).Take(&p.Author).Error
+		if err != nil {
+			return &Transact{}, err
+		}
+	}
 
 	return p, nil
 }
@@ -197,7 +207,7 @@ var GlobalEncParams = ckks.ParametersLiteral{
 	RingType:     ring.Standard,
 }
 
-func (p *Transact) EncOutputFromMeta(meta TransactMetaParams) (string, string) {
+func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) (string, string) {
 	paramLogsGlobalBuyerMeta := 2
 	paramLogsGlobalBuyerBill := 1
 
@@ -207,9 +217,8 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams) (string, string) {
 	}
 
 	// Secret Key Generation
-	skStr := Secrecy()
 	sk := ckks.NewSecretKey(params)
-	_ = UnmarshalFromBase64(sk, skStr)
+	_ = UnmarshalFromBase64(sk, secretKey)
 
 	// Evaluator Key Generation
 	kgen := ckks.NewKeyGenerator(params)
@@ -229,7 +238,7 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams) (string, string) {
 
 	// Buyer Bill
 	buyerBill := make([]float64, paramLogsGlobalBuyerBill)
-	buyerBill[0] = float64(meta.TransactMeta.ProductPrice)
+	buyerBill[0] = float64(meta.TransactMeta.Product.Price)
 
 	// Encoder
 	encoder := ckks.NewEncoder(params)
@@ -242,21 +251,25 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams) (string, string) {
 	var ciphertextBuyerMeta *ckks.Ciphertext
 	var ciphertextBuyerBill *ckks.Ciphertext
 	ciphertextBuyerMeta = encryptor.EncryptNew(plaintextBuyerMeta)
+
+	fmt.Println("LEVEL: ", ciphertextBuyerMeta.Level())
+	fmt.Println("SCALE: ", ciphertextBuyerMeta.Scale)
+	//fmt.Println("SCALEing(): ", ciphertextBuyerBill.ScalingFactor())
+
 	ciphertextBuyerBill = encryptor.EncryptNew(plaintextBuyerBill)
 
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
 
 	if meta.Discount.PercentCut > 0.0 {
+		//fmt.Println(meta.Discount.PercentCut)
 		evaluator.MultByConst(ciphertextBuyerBill, meta.Discount.PercentCut, ciphertextBuyerBill)
-		//evaluator.AddConst(ciphertextBuyerBill, float64(meta.Discount.FixedCut)*(-1.00), ciphertextBuyerBill)
 	}
 
 	if meta.Discount.FixedCut > 0.0 {
 		//fmt.Println(float64(meta.Discount.FixedCut)*(-1.00))
-		//evaluator.AddConst(ciphertextBuyerBill, float64(meta.Discount.FixedCut)*(-1.00), ciphertextBuyerBill)
+		evaluator.AddConst(ciphertextBuyerBill, float64(meta.Discount.FixedCut)*(-1.00), ciphertextBuyerBill)
 	}
-
 
 	// Decryption Testing
 	tmpBuyerMeta := encoder.Decode(decryptor.DecryptNew(ciphertextBuyerMeta), paramLogsGlobalBuyerMeta)
@@ -268,9 +281,8 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams) (string, string) {
 		valuesTest[i] = real(tmpBuyerMeta[i])
 	}
 
-	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
-	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[1])
-
+	//fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
+	//fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[1])
 
 	// Value Assignment from Decryption
 	valuesTest2 := make([]float64, len(tmpBuyerBill))
@@ -278,22 +290,18 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams) (string, string) {
 		valuesTest2[i] = real(tmpBuyerBill[i])
 	}
 
-	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest2[0])
-	fmt.Println(valuesTest2[0])
-
-	//fmt.Println(float64(30000.0)*float64(0.3))
+	//fmt.Printf("ValuesTest: %.3f ...\n", valuesTest2[0])
 
 	str1 := MarshalToBase64String(ciphertextBuyerMeta)
 	str2 := MarshalToBase64String(ciphertextBuyerBill)
 
-	f, _ := os.Create("data4.txt")
-	defer f.Close()
-	data := []byte(str2)
-	_, _ = f.Write(data)
+	//f, _ := os.Create("data4.txt")
+	//defer f.Close()
+	//data := []byte(str2)
+	//_, _ = f.Write(data)
 
-
-	fmt.Println(len(str1))
-	fmt.Println(len(str2))
+	//fmt.Println(len(str1))
+	//fmt.Println(len(str2))
 
 	return str1, str2
 }

@@ -31,26 +31,6 @@ var users = []models.User{
 		Email:    "steven@gmail.com",
 		Password: "password",
 	},
-	models.User{
-		Nickname: "Martin Luther",
-		Email:    "luther@gmail.com",
-		Password: "password",
-	},
-	models.User{
-		Nickname: "Martin Luther2",
-		Email:    "luther2@gmail.com",
-		Password: "password",
-	},
-	models.User{
-		Nickname: "Martin Luther3",
-		Email:    "luther3@gmail.com",
-		Password: "password",
-	},
-	models.User{
-		Nickname: "Martin Luther4",
-		Email:    "luther4@gmail.com",
-		Password: "password",
-	},
 }
 
 var posts = []models.Post{
@@ -61,22 +41,6 @@ var posts = []models.Post{
 	models.Post{
 		Title:   "Title 2",
 		Content: "Hello world 2",
-	},
-	models.Post{
-		Title:   "Title 3",
-		Content: "Hello world 3",
-	},
-	models.Post{
-		Title:   "Title 4",
-		Content: "Hello world 4",
-	},
-	models.Post{
-		Title:   "Title 5",
-		Content: "Hello world 5",
-	},
-	models.Post{
-		Title:   "Title 6",
-		Content: "Hello world 6",
 	},
 }
 
@@ -89,26 +53,6 @@ var items = []models.Item{
 	models.Item{
 		Title:   "Title 2",
 		Content: "Hello world 2",
-		Price: 30000.00,
-	},
-	models.Item{
-		Title:   "Title 3",
-		Content: "Hello world 3",
-		Price: 30000.00,
-	},
-	models.Item{
-		Title:   "Title 4",
-		Content: "Hello world 4",
-		Price: 30000.00,
-	},
-	models.Item{
-		Title:   "Title 5",
-		Content: "Hello world 5",
-		Price: 30000.00,
-	},
-	models.Item{
-		Title:   "Title 6",
-		Content: "Hello world 6",
 		Price: 30000.00,
 	},
 }
