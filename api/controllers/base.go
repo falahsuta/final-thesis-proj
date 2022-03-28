@@ -65,9 +65,12 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 func (server *Server) Run(addr string) {
 	fmt.Println("Listening to port 8080")
 
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+	headersOk := handlers.AllowedHeaders([]string{"Accept", "Accept-Language", "Content-Type", "Content-Language", "Origin", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	bearer := handlers.ExposedHeaders([]string{"X-CORS-TEST"})
+	bearer2 := handlers.AllowCredentials()
 
-	log.Fatal(http.ListenAndServe(addr, handlers.CORS(originsOk, headersOk, methodsOk)(server.Router)))
+
+	log.Fatal(http.ListenAndServe(addr, handlers.CORS(headersOk, originsOk, methodsOk, bearer, bearer2)(server.Router)))
 }

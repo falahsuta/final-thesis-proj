@@ -2,12 +2,12 @@ import axios from "axios";
 import Cookies from 'js-cookie'
 
 export const fetchTag = () => async (dispatch) => {
-    let p = Cookies.get('access_token')
-    let config = {
-        headers: {Authorization: `Bearer ${p}`}
-
-    }
-    const response = await axios.get("http://localhost:8080/tags", config);
+    // let p = Cookies.get('access_token')
+    // let config = {
+    //     headers: {Authorization: `Bearer ${p}`}
+    //
+    // }
+    const response = await axios.get("http://localhost:8080/tags");
     dispatch({type: "FETCH_TAG", payload: response.data});
 };
 

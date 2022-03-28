@@ -24,19 +24,19 @@ const Confirm = ({
 
   const handleSend = () => {
     if (user.currentUser.id) {
-      const userId = user.currentUser.id;
-      const username = user.currentUser.username;
       const value = {
-        userId,
         title,
-        description,
-        image,
-        tag: tag.toLowerCase(),
         content,
-        username: username.slice(0, username.indexOf("@")),
+        description,
+        "images": image.split(" "),
+        "tag": tag.toLowerCase(),
+        "author_id": user.currentUser.id,
+        quantity,
+        price: price.split(".")[0],
       };
-      console.log(value);
-      dispatch(createPost(value));
+
+      console.table(value);
+      // dispatch(createPost(value));
     }
   };
 

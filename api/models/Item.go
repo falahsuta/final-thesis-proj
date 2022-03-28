@@ -13,18 +13,20 @@ import (
 )
 
 type Item struct {
-	ID        uint64         `gorm:"primary_key;auto_increment" json:"id"`
-	Title     string         `gorm:"size:255;not null;unique" json:"title"`
-	Content   string         `gorm:"size:255;not null;" json:"content"`
-	Author    User           `json:"author"`
-	AuthorID  uint32         `sql:"type:int REFERENCES users(id)" json:"author_id"`
-	CreatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
-	UpdatedAt time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
-	Images    pq.StringArray `gorm:"type:text[]" json:"images"`
-	Quantity  uint32         `gorm:"type:int" json:"quantity"`
-	TotalSold uint32         `gorm:"type:int" json:"total_sold"`
-	Buyer     pq.StringArray `gorm:"type:text[]" json:"buyer_ids"`
-	Price     float64        `sql:"type:float" json:"price"`
+	ID          uint64         `gorm:"primary_key;auto_increment" json:"id"`
+	Title       string         `gorm:"size:255;not null;unique" json:"title"`
+	Content     string         `gorm:"size:255;not null;" json:"content"`
+	Description string         `gorm:"type:text" json:"description"`
+	Author      User           `json:"author"`
+	AuthorID    uint32         `sql:"type:int REFERENCES users(id)" json:"author_id"`
+	CreatedAt   time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
+	UpdatedAt   time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
+	Images      pq.StringArray `gorm:"type:text[]" json:"images"`
+	Quantity    uint32         `gorm:"type:int" json:"quantity"`
+	TotalSold   uint32         `gorm:"type:int" json:"total_sold"`
+	Buyer       pq.StringArray `gorm:"type:text[]" json:"buyer_ids"`
+	Price       float64        `sql:"type:float" json:"price"`
+	Tags        string         `gorm:"size:255;not null;" json:"tags"`
 }
 
 type Pagination struct {
@@ -79,6 +81,24 @@ func (p *Item) FindAllItems(db *gorm.DB) (*[]Item, error) {
 	var err error
 	items := []Item{}
 	err = db.Debug().Model(&Item{}).Limit(100).Find(&items).Error
+	if err != nil {
+		return &[]Item{}, err
+	}
+	if len(items) > 0 {
+		for i, _ := range items {
+			err := db.Debug().Model(&User{}).Where("id = ?", items[i].AuthorID).Take(&items[i].Author).Error
+			if err != nil {
+				return &[]Item{}, err
+			}
+		}
+	}
+	return &items, nil
+}
+
+func (p *Item) FindTopItems(db *gorm.DB) (*[]Item, error) {
+	var err error
+	items := []Item{}
+	err = db.Debug().Model(&Item{}).Order("desc total_sold").Limit(3).Find(&items).Error
 	if err != nil {
 		return &[]Item{}, err
 	}

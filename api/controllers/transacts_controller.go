@@ -123,6 +123,24 @@ func (server *Server) GetTransact(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, transactReceived)
 }
 
+func (server *Server) GetMyTransact(w http.ResponseWriter, r *http.Request) {
+	transact := models.Transact{}
+
+	//CHeck if the auth token is valid and  get the user id from it
+	uid, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+
+	transactReceived, err := transact.FindItemByUID(server.DB, uid)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK, transactReceived)
+}
+
 func (server *Server) UpdateTransact(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)

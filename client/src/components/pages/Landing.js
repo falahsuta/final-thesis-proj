@@ -17,8 +17,8 @@ export default () => {
   const dispatch = useDispatch();
 
   const getRequiredPost = async () => {
-    await dispatch(getFirstPost());
-    await dispatch(fetchTag());
+      await dispatch(fetchTag());
+      await dispatch(getFirstPost());
   };
 
   if (!timeline) {

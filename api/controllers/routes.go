@@ -13,6 +13,7 @@ func (s *Server) initializeRoutes() {
 	//Users routes
 	s.Router.HandleFunc("/users", middlewares.SetMiddlewareJSON(s.CreateUser)).Methods("POST")
 	s.Router.HandleFunc("/users", middlewares.SetMiddlewareJSON(s.GetUsers)).Methods("GET")
+	s.Router.HandleFunc("/myusers", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetMeUser))).Methods("GET")
 	s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareJSON(s.GetUser)).Methods("GET")
 	s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateUser))).Methods("PUT")
 	s.Router.HandleFunc("/users/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteUser)).Methods("DELETE")
@@ -40,9 +41,9 @@ func (s *Server) initializeRoutes() {
 
 	//Balances routes
 	s.Router.HandleFunc("/balances", middlewares.SetMiddlewareJSON(s.GetBalances)).Methods("GET")
-	s.Router.HandleFunc("/topup", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.TopupBalances))).Methods("POST")
-	s.Router.HandleFunc("/mybalances", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.ActivateBalances))).Methods("POST")
-	s.Router.HandleFunc("/mybalances", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetBalance))).Methods("GET")
+	s.Router.HandleFunc("/mybalances/topup", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.TopupBalances))).Methods("POST")
+	s.Router.HandleFunc("/mybalances/activate", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.ActivateBalances))).Methods("POST")
+	s.Router.HandleFunc("/mybalances/check", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.GetBalance))).Methods("GET")
 
 	//Discounts routes
 	s.Router.HandleFunc("/discounts", middlewares.SetMiddlewareJSON(s.CreateDiscount)).Methods("POST")
