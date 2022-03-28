@@ -13,7 +13,7 @@ const SecondStep = ({
   isError,
 }) => {
   // Check if all values are not empty
-  const isEmpty = content.length > 0;
+  const isEmpty = content.length > 0 && content.length <= 200;
   return (
     <Fragment>
       <Grid container spacing={2}>

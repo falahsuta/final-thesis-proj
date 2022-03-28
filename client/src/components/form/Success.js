@@ -14,7 +14,7 @@ const Success = () => {
 				Thank 
 			</Typography> */}
       <Typography component="p" align="center">
-        Your request has been successfully processed. Timeline has been Updated.
+        Your selling request has been successfully processed. Timeline has been Updated.
       </Typography>
     </Fragment>
   );

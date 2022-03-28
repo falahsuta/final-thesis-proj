@@ -7,35 +7,34 @@ import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import Button from "@material-ui/core/Button";
 import {useSelector} from "react-redux";
-
-import CurrencyTextField from '@unicef/material-ui-currency-textfield'
+import CurrencyTextField from "@unicef/material-ui-currency-textfield";
 
 // Destructure props
 const FirstStep = ({
   handleNext,
   handleChange,
-  values: { title, description, image, tag, price },
+  values: { title, description, image, tag, price, quantity },
   filedError,
   isError,
 }) => {
+  const tags = useSelector((state) => state.tag);
+
   // Check if all values are not empty
   const isEmpty =
     title.length > 0 &&
-    title.length > 35 &&
-    title.length < 71 &&
-    description.length >= 24 &&
-    description.length <= 36 &&
+    title.length >= 6 &&
+    title.length <= 16 &&
+    description.length >= 6 &&
+    description.length <= 16 &&
     tag.length > 0 &&
+    parseInt(quantity) > 0 &&
+    parseInt(quantity) < 36 &&
     image.length > 0 &&
-      price.length > 0 &&
-    // image.length > 0;
     image.length >= 12;
-
-  const tags = useSelector((state) => state.tag);
 
   return (
     <Fragment>
-      <Grid container spacing={1} noValidate>
+      <Grid container spacing={2} noValidate>
         <Grid item xs={12} sm={12}>
           <TextField
             fullWidth
@@ -98,6 +97,25 @@ const FirstStep = ({
           />
         </Grid>
 
+        <Grid item xs={12} sm={4}>
+          <TextField
+              fullWidth
+              type="number"
+              min="0"
+              label="Quantity"
+              name="quantity"
+              placeholder="Your Quantity"
+              defaultValue={description}
+              onChange={handleChange("quantity")}
+              margin="normal"
+              error={filedError.quantity !== ""}
+              helperText={
+                filedError.quantity !== "" ? `${filedError.quantity}` : ""
+              }
+              required
+          />
+        </Grid>
+
         <Grid item xs={12} sm={12}>
           <TextField
             fullWidth
@@ -113,33 +131,25 @@ const FirstStep = ({
             required
           />
         </Grid>
+
         <Grid item xs={12} sm={6}>
-          <FormControl fullWidth required margin="normal">
-            <InputLabel htmlFor="tag">Tag</InputLabel>
-            <Select value={tag} onChange={handleChange("tag")}>
-              {tags && tags.length > 0 && (
-                  tags.map(e => {
+          {tags && tags.length > 0 && (
+              <FormControl fullWidth required margin="normal">
+                <InputLabel htmlFor="tag">Tag</InputLabel>
+                <Select value={tag} onChange={handleChange("tag")}>
+                  {tags.map(e => {
                     return (
-                        <>
-                          <MenuItem value={e}>{e.name}</MenuItem>
-                        </>
+                        <MenuItem value={e.name}>{e.name}</MenuItem>
                     )
-                  })
-              )}
-              {/*<MenuItem value={"Quirk"}>Quirk</MenuItem>*/}
-              {/*<MenuItem value={"Cool"}>Cool</MenuItem>*/}
-              {/*<MenuItem value={"Informative"}>Informative</MenuItem>*/}
-              {/*<MenuItem value={"Tech"}>Tech</MenuItem>*/}
-              {/*<MenuItem value={"Rnb"}>Rnb</MenuItem>*/}
-              {/*<MenuItem value={"Soul"}>Soul</MenuItem>*/}
-              {/*<MenuItem value={"Pop"}>Pop</MenuItem>*/}
-              {/*<MenuItem value={"Study-tips"}>Study-Tips</MenuItem>*/}
-            </Select>
-          </FormControl>
+                  })}
+                </Select>
+              </FormControl>
+          )}
         </Grid>
+
       </Grid>
       <div
-        style={{ display: "flex", marginTop: 10, justifyContent: "flex-end" }}
+        style={{ display: "flex", marginTop: 50, justifyContent: "flex-end" }}
       >
         <Button
           variant="contained"

@@ -22,7 +22,6 @@ const StepForm = (props) => {
     content: "",
     price: "",
     quantity: "",
-
   });
   // Copy fields as they all have the same name
   const [filedError, setFieldError] = useState({
@@ -46,31 +45,38 @@ const StepForm = (props) => {
 
     // Handle errors
     const formErrors = { ...filedError };
-    const contentValidate = value.length > 200 || value.length <= 1;
-    const titleValidate = value.length < 6 || value.length > 16;
-    const descValidate = value.length < 6 || value.length > 16;
+    const lengthValidate = value.length > 0 && value.length < 3;
+    const contentValidate = value.length < 10;
+    const titleValidate = value.length < 6 || value.length > 20;
+    const priceValidate = value.length < 6 || value.length > 20;
+    const qtyValidate = parseInt(value) < 1 || parseInt(value) > 30;
+    const descValidate = value.length < 8 || value.length > 36;
     const imageLinkValidate = value.length >= 12;
-
-    const priceValidate = value.length < 6 || value.length > 26;
-    const qtyValidate = parseInt(value) > 35 || parseInt(value) < 6;
 
     // console.log("form errors");
     // console.log(formErrors);
+    // console.log("is error ? ", isError)
+
 
     switch (input) {
       case "title":
         formErrors.title = titleValidate
-          ? "Minimum 6 characters and Maximum of 16 characters"
+          ? "Minimum 6 characters and Maximum of 60 characters"
           : "";
         break;
       case "description":
         formErrors.description = descValidate
-          ? "Minimum 6 characters and Maximum of 6 characters"
+          ? "Minimum 8 characters and Maximum of 36 characters"
           : "";
         break;
       case "price":
         formErrors.price = priceValidate
             ? "Minimum 3 digit price"
+            : "";
+        break;
+      case "quantity":
+        formErrors.quantity = qtyValidate
+            ? "Minimum 1 units and max 30 units"
             : "";
         break;
       case "image":
@@ -79,14 +85,9 @@ const StepForm = (props) => {
           ? ""
           : "Invalid Link Detected, Link has to required minimum of 12 characters";
         break;
-      case "quantity":
-        formErrors.quantity = qtyValidate
-            ? "Minimum 1 units and max 35 units"
-            : "";
-        break;
       case "content":
         formErrors.content = contentValidate
-          ? "Content at least contain 2 characters long and max 200 characters"
+          ? "Content at least contain 10 characters long"
           : "";
         break;
       default:

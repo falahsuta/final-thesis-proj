@@ -13,7 +13,7 @@ import { useDispatch } from "react-redux";
 const Confirm = ({
   handleNext,
   handleBack,
-  values: { title, description, image, tag, content, price, quantity },
+  values: { title, description, image, tag, content, quantity, price },
 }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user);
@@ -24,19 +24,23 @@ const Confirm = ({
 
   const handleSend = () => {
     if (user.currentUser.id) {
-      const userId = user.currentUser.id;
-      const username = user.currentUser.username;
+
+
+
       const value = {
-        userId,
         title,
-        description,
-        image,
-        tag: tag.toLowerCase(),
         content,
-        username: username.slice(0, username.indexOf("@")),
+        description,
+        "images": image.split(" "),
+        "tag": tag.toLowerCase(),
+        "author_id": user.currentUser.id,
+        quantity,
+        price,
       };
-      console.log(value);
-      dispatch(createPost(value));
+
+      console.log(value)
+
+      // dispatch(createPost(value));
     }
   };
 
@@ -51,14 +55,6 @@ const Confirm = ({
 
         <ListItem>
           <ListItemText primary="Description" secondary={cap(description)} />
-        </ListItem>
-
-        <ListItem>
-          <ListItemText primary="Price" secondary={`Rp. ${cap(price).split(".")[0]}`} />
-        </ListItem>
-
-        <ListItem>
-          <ListItemText primary="Quantity" secondary={cap(quantity)} />
         </ListItem>
 
         <Divider />

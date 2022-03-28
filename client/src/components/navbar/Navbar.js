@@ -75,6 +75,7 @@ export default () => {
   };
 
   const links = (currentUser) => {
+
     return [
       !currentUser && {
         label: "SignUp",
@@ -84,6 +85,8 @@ export default () => {
         label: "Login",
         form: <SignInForm closeAll={closeAll} />,
       },
+      currentUser && { label: "Balances" },
+      currentUser && { label: "History" },
       currentUser && { label: "Contribution" },
       currentUser && { label: "Logout" },
     ]
