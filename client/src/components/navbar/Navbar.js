@@ -12,6 +12,8 @@ import { useLocation } from "react-router-dom";
 import SignInForm from "../form/signin/SignInForm";
 import SignUpForm from "../form/signup/SignUpForm";
 import Contribute from "../dialog/Contribute";
+import Transact from "../dialog/Transact";
+import Balance from "../dialog/Balance";
 
 import { signOut, closeContribe } from "../../actions";
 
@@ -39,6 +41,9 @@ export default () => {
   const [showRegister, setShowRegister] = useState(false);
   const [openClick, setOpenClick] = useState(false);
 
+  const [openTransact, setOpenTransact] = useState(false);
+  const [openBalance, setOpenBalance] = useState(false);
+
   const handleOpen = (label) => {
     label === "SignUp" ? setShowRegister(true) : setShowLogin(true);
   };
@@ -53,6 +58,8 @@ export default () => {
 
   const handleClickClose = () => {
     setOpenClick(false);
+    setOpenBalance(false);
+    setOpenTransact(false);
     // transition paused close for better unmounting contribes component
     setTimeout(() => {
       dispatch(closeContribe());
@@ -66,6 +73,14 @@ export default () => {
 
     if (label === "Contribution") {
       setOpenClick(true);
+    }
+
+    if (label === "History") {
+      setOpenTransact(true)
+    }
+
+    if (label === "Balances") {
+      setOpenBalance(true)
     }
   };
 
@@ -177,6 +192,44 @@ export default () => {
           <Contribute openClick={openClick} userId={user.currentUser.id} />
         )}
       </Dialog>
+
+
+      <Dialog
+          open={openTransact}
+          TransitionComponent={Transition}
+          onClose={() => handleClickClose()}
+          aria-labelledby="alert-dialog-slide-title"
+          aria-describedby="alert-dialog-slide-description"
+          maxWidth="md"
+          scroll="body"
+          // keepMounted
+          // fullWidth
+          // PaperComponent={TagAll}
+      >
+        {user && user.currentUser && (
+            <Transact openClick={openTransact} userId={user.currentUser.id} />
+        )}
+      </Dialog>
+
+      <Dialog
+          open={openBalance}
+          TransitionComponent={Transition}
+          onClose={() => handleClickClose()}
+          aria-labelledby="alert-dialog-slide-title"
+          aria-describedby="alert-dialog-slide-description"
+          maxWidth="md"
+          scroll="body"
+          // keepMounted
+          // fullWidth
+          // PaperComponent={TagAll}
+      >
+        {user && user.currentUser && (
+            <Balance openClick={openBalance} userId={user.currentUser.id} />
+        )}
+      </Dialog>
     </div>
+
+
+
   );
 };

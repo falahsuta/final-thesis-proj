@@ -27,6 +27,7 @@ type Transact struct {
 type TransactMeta struct {
 	DiscName  string `gorm:"size:255;not null;" json:"disc_name"`
 	ProductID uint64 `sql:"type:int REFERENCES items(id)" json:"product_id"`
+	Quantity  uint64 `sql:"type:int" json:"qty"`
 	Product   Item
 }
 
