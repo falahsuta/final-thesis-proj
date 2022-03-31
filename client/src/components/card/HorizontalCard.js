@@ -78,13 +78,15 @@ export default (props) => {
 
   const [open, setOpen] = React.useState(false);
 
+
+
   const handleOpen = () => {
-    dispatch(fetchPost(props.id));
+    // dispatch(fetchPost(props.id));
     setOpen(true);
   };
 
   const handleClose = () => {
-    dispatch(closePost());
+    // dispatch(closePost());
     setOpen(false);
   };
 
@@ -100,20 +102,25 @@ export default (props) => {
         onClick={handleOpen}
       >
         <CardMedia
-          className={classes.cover}
-          image={props.imglink}
-          title="Live from space album cover"
+            className={classes.cover}
+            image={props.imglink}
+            title="Live from space album cover"
         />
         <CardActionArea>
           <div className={classes.details}>
             <CardContent className={classes.content}>
               <Typography variant="subtitle2">{props.title}</Typography>
-              <br />
+              <div style={{marginTop: "8px"}}></div>
               <Typography variant="caption" color="textSecondary">
                 {props.name ? props.name : "JoeMama"} in{" "}
               </Typography>
               <Typography variant="caption" color="textPrimary">
                 {`t/${props.tag}`}
+              </Typography>
+
+              <br />
+              <Typography variant="caption" color="textPrimary" style={{marginTop: "20px"}}>
+                {`Price: Rp. ${props.price ? props.price.toLocaleString() : props.price}, Qty: ${props.quantity ? props.quantity.toLocaleString() : props.quantity}`}
               </Typography>
             </CardContent>
           </div>

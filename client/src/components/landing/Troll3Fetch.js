@@ -16,10 +16,10 @@ const style = {
 const Scroll2Fetch = (props) => {
   const { tag } = props;
 
-  const [items, setItems] = useState(props.timeline.docs);
+  const [items, setItems] = useState(props.timeline.items);
   const [currIdx, setCurrIdx] = useState(2);
   const [hasMore, setHasMore] = useState(true);
-  const [totalDocument, setTotalDocument] = useState(props.timeline.totalDocs);
+  const [totalDocument, setTotalDocument] = useState(props.timeline["total_counts"]);
 
   const fetchMoredata = async () => {
     if (items.length >= totalDocument) {
@@ -28,13 +28,13 @@ const Scroll2Fetch = (props) => {
     }
 
     const response = await axios.get(
-      `http://localhost:4002/api/posts/?${
+      `http://localhost:8080/items/paginate?${
         tag ? `t=${tag}&` : ""
       }limit=6&page=${currIdx}`
     );
 
     setTimeout(() => {
-      setItems((prevItems) => prevItems.concat(response.data.docs));
+      setItems((prevItems) => prevItems.concat(response.data.items));
       setCurrIdx((prevIndex) => prevIndex + 1);
     }, 1000);
   };

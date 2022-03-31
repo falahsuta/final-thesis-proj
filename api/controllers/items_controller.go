@@ -79,6 +79,26 @@ func (server *Server) GetItemsWithPagination(w http.ResponseWriter, r *http.Requ
 	responses.JSON(w, http.StatusOK, items)
 }
 
+func (server *Server) GetMyItemsWithPagination(w http.ResponseWriter, r *http.Request) {
+	item := models.Item{}
+
+	pagination := item.GeneratePaginationFromRequest(r)
+
+	//CHeck if the auth token is valid and  get the user id from it
+	uid, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+
+	items, err := item.FindMyItems(server.DB, &pagination, uid)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK, items)
+}
+
 func (server *Server) GetItem(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)

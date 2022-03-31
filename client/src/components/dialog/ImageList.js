@@ -5,7 +5,7 @@ import ImageListItem from '@material-ui/core/ImageListItem';
 import ImageListItemBar from '@material-ui/core/ImageListItemBar';
 import IconButton from '@material-ui/core/IconButton';
 import StarBorderIcon from '@material-ui/icons/StarBorder';
-import itemData from './itemData';
+// import itemData from './itemData';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -46,16 +46,18 @@ const useStyles = makeStyles((theme) => ({
  *   },
  * ];
  */
-export default function SingleLineImageList() {
+export default function SingleLineImageList(props) {
     const classes = useStyles();
+
+
 
     return (
         <div className={classes.root}>
 
             <ImageList className={classes.imageList} cols={2.5}>
-                {itemData.map((item, index) => (
-                    <ImageListItem key={item.img}>
-                        <img src={item.img} alt={item.title} />
+                {props.itemData.map((item, index) => (
+                    <ImageListItem key={index}>
+                        <img src={item} alt={item} />
                         <ImageListItemBar
                             title={`Gambar ke ${index+1}`}
                             classes={{

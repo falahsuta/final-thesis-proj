@@ -132,8 +132,10 @@ export const commentReply = (value) => async (dispatch) => {
 
 export const getFirstPost = () => async (dispatch) => {
     const response = await axios.get(
-        "http://localhost:4002/api/posts?limit=6&page=1"
+        "http://localhost:8080/items/paginate?limit=6&page=1"
     );
+
+    // console.log(response.data)
 
     dispatch({
         type: "POST_TIMELINE",

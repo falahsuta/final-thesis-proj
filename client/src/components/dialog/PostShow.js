@@ -18,6 +18,8 @@ import ReplyField from "../reply/ReplyField";
 
 import GroupedButtons from "./GroupedButton";
 import ImageList from "./ImageList";
+import Cookies from "js-cookie";
+import axios from "axios";
 
 const useStyles = makeStyles({
   root: {
@@ -27,13 +29,40 @@ const useStyles = makeStyles({
 
 export default (props) => {
   const classes = useStyles();
-  const post = useSelector((state) => state.post);
+  // const post = useSelector((state) => state.post);
   const user = useSelector((state) => state.user);
+
+  const [post, setPost] = useState();
   const [showReply, setShowReply] = useState(false);
 
   const replyTrueIfClicked = () => {
     setShowReply(!showReply);
   };
+
+  const fetchItem = async () => {
+    let url = `http://localhost:8080/items/${props.id}`
+    let p = Cookies.get('access_token')
+
+    const config = {
+      headers: {Authorization: `Bearer ${p}`},
+    };
+
+    try {
+      const response = await axios.get(
+          url,
+          config,
+      )
+
+      setPost(response.data)
+
+    } catch (err) {
+      setPost([])
+    }
+  }
+
+  React.useEffect(() => {
+    fetchItem()
+  }, [])
 
   const getRandom = () => {
     const num = Math.random();
@@ -48,10 +77,10 @@ export default (props) => {
         <CardContent>
           <Container>
             <Typography gutterBottom variant="h5" component="h2">
-              {post ? post.post.title : ""}
+              {post.title ? post.title : ""}
             </Typography>
             <div style={{ marginTop: "10px" }}></div>
-            <ImageList />
+            {post && <ImageList itemData={post.images}/>}
             <div style={{ marginTop: "15px" }}></div>
             <Typography
               variant="body1"
@@ -59,7 +88,7 @@ export default (props) => {
               component="p"
               align="justify"
             >
-              {post ? post.post.description : ""}
+              {post ? post.description : ""}
             </Typography>
             {/*<div style={{ marginTop: "25px" }}></div>*/}
             {/*<ImageList />*/}
@@ -72,7 +101,7 @@ export default (props) => {
               component="p"
               align="justify"
             >
-              {post ? post.post.content : ""}
+              {post ? post.content : ""}
             </Typography>
 
             <br />
@@ -97,7 +126,7 @@ export default (props) => {
                     </>
                 ) : (
                   <>
-                    <GroupedButtons />
+                    {post.price && <GroupedButtons totalQty={post.quantity} price={post.price}/>}
 
                     {/*<ReplyTag buttonText="" action={replyTrueIfClicked}>*/}
                     {/*  /!*<ReplyRoundedIcon />*!/*/}

@@ -1,6 +1,7 @@
 package seed
 
 import (
+	"github.com/lib/pq"
 	"log"
 
 	"finalthesisproject/api/models"
@@ -31,6 +32,31 @@ var users = []models.User{
 		Email:    "steven@gmail.com",
 		Password: "password",
 	},
+	models.User{
+		Nickname: "Steven victor2",
+		Email:    "steven2@gmail.com",
+		Password: "password",
+	},
+	models.User{
+		Nickname: "Steven victor3",
+		Email:    "steven3@gmail.com",
+		Password: "password",
+	},
+	models.User{
+		Nickname: "Steven victor4",
+		Email:    "steven4@gmail.com",
+		Password: "password",
+	},
+	models.User{
+		Nickname: "Steven victor5",
+		Email:    "steven5@gmail.com",
+		Password: "password",
+	},
+	models.User{
+		Nickname: "Steven victor6",
+		Email:    "steven6@gmail.com",
+		Password: "password",
+	},
 }
 
 var posts = []models.Post{
@@ -49,11 +75,43 @@ var items = []models.Item{
 		Title:   "Title 1",
 		Content: "Hello world 1",
 		Price: 30000.00,
+		Images: pq.StringArray{"https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg"},
+		Quantity: 9,
 	},
 	models.Item{
 		Title:   "Title 2",
 		Content: "Hello world 2",
 		Price: 30000.00,
+		Images: pq.StringArray{"https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg"},
+		Quantity: 9,
+	},
+	models.Item{
+		Title:   "Title 3",
+		Content: "Hello world 3",
+		Price: 30000.00,
+		Images: pq.StringArray{"https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg"},
+		Quantity: 9,
+	},
+	models.Item{
+		Title:   "Title 4",
+		Content: "Hello world 4",
+		Price: 30000.00,
+		Images: pq.StringArray{"https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg"},
+		Quantity: 9,
+	},
+	models.Item{
+		Title:   "Title 5",
+		Content: "Hello world 5",
+		Price: 30000.00,
+		Images: pq.StringArray{"https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg"},
+		Quantity: 9,
+	},
+	models.Item{
+		Title:   "Title 6",
+		Content: "Hello world 6",
+		Price: 30000.00,
+		Images: pq.StringArray{"https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg"},
+		Quantity: 9,
 	},
 }
 
@@ -146,12 +204,12 @@ func Load(db *gorm.DB) {
 		if err != nil {
 			log.Fatalf("cannot seed users table: %v", err)
 		}
-		posts[i].AuthorID = users[i].ID
-
-		err = db.Debug().Model(&models.Post{}).Create(&posts[i]).Error
-		if err != nil {
-			log.Fatalf("cannot seed posts table: %v", err)
-		}
+		//posts[i].AuthorID = users[i].ID
+		//
+		//err = db.Debug().Model(&models.Post{}).Create(&posts[i]).Error
+		//if err != nil {
+		//	log.Fatalf("cannot seed posts table: %v", err)
+		//}
 
 		items[i].AuthorID = users[i].ID
 		err = db.Debug().Model(&models.Item{}).Create(&items[i]).Error

@@ -20,8 +20,6 @@ import {Check} from '@material-ui/icons';
 import Success from "./Success";
 
 
-
-
 export default (props) => {
   const markProps = "markprops";
 
@@ -66,7 +64,6 @@ export default (props) => {
 
 
 
-  // console.log(items);
 
   return (
     <>

@@ -34,6 +34,8 @@ func (server *Server) GetBalance(w http.ResponseWriter, r *http.Request) {
 
 	balances, err := balance.FindMyBalances(server.DB, uid)
 
+
+
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return

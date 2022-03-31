@@ -15,6 +15,11 @@ type Discount struct {
 	UpdatedAt  time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
+type DiscountParams struct {
+	Discount    []Discount `json:"discounts"`
+	TotalCounts int64      `json:"total_counts"`
+}
+
 func (p *Discount) TableName() string {
 	return "discounts"
 }
@@ -53,12 +58,29 @@ func (p *Discount) SaveItem(db *gorm.DB) (*Discount, error) {
 func (p *Discount) FindAllItems(db *gorm.DB) (*[]Discount, error) {
 	var err error
 	discounts := []Discount{}
-	err = db.Debug().Model(&Item{}).Limit(100).Find(&discounts).Error
+	err = db.Debug().Model(&Discount{}).Limit(100).Find(&discounts).Error
 	if err != nil {
 		return &[]Discount{}, err
 	}
 
 	return &discounts, nil
+}
+
+func (p *Discount) FindAllItemsWithPaginate(db *gorm.DB, pagination *Pagination) (*DiscountParams, error) {
+	discounts := []Discount{}
+	offset := (pagination.Page - 1) * pagination.Limit
+	queryBuider := db.Limit(pagination.Limit).Offset(offset).Order(pagination.Sort)
+	result := queryBuider.Model(&Item{}).Find(&discounts)
+
+	if result.Error != nil {
+		msg := result.Error
+		return nil, msg
+	}
+
+	var count int64
+	db.Model(&Discount{}).Count(&count)
+
+	return &DiscountParams{Discount: discounts, TotalCounts: count}, nil
 }
 
 func (p *Discount) FindItemByID(db *gorm.DB, pid uint64) (*Discount, error) {

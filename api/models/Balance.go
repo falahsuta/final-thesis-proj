@@ -91,6 +91,9 @@ func (p *Balance) FindMyBalances(db *gorm.DB, uid uint32) (*Balance, error) {
 		return &Balance{}, err
 	}
 
+	s := p.DecryptFromString(db, uid, balances.CurrentBalance)
+	balances.CurrentBalance = s
+
 	return &balances, nil
 }
 
@@ -193,7 +196,7 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, currentBalanc
 
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
-	evaluator.AddConst(ciphertext, (addedConstant*-1.00), ciphertext)
+	evaluator.AddConst(ciphertext, (addedConstant), ciphertext)
 
 	// Encoder
 	encoder := ckks.NewEncoder(params)
@@ -206,6 +209,8 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, currentBalanc
 	}
 
 	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
+
+	//s := fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
 
 	str1 := MarshalToBase64String(ciphertext)
 
@@ -221,5 +226,50 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, currentBalanc
 	}
 
 	return &Balance{CurrentBalance: str1, UpdatedAt: time.Now()}
-
 }
+
+
+func (p *Balance) DecryptFromString(db *gorm.DB,uid uint32, currBalance string) string {
+	paramLogsGlobalBalance := 1
+	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
+
+	user := User{}
+	user.FindUserByID(db, uid)
+
+	var ciphertext = ckks.NewCiphertext(params, 1, 5, 1.073741824e+09)
+
+	UnmarshalFromBase64(ciphertext, currBalance)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Secret Key Generation
+	sk := ckks.NewSecretKey(params)
+	_ = UnmarshalFromBase64(sk, user.SecretKey)
+
+
+	// Decryptor
+	decryptor := ckks.NewDecryptor(params, sk)
+
+
+
+
+
+	// Encoder
+	encoder := ckks.NewEncoder(params)
+	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
+
+	// Value Assignment from Decryption
+	valuesTest := make([]float64, len(tmp))
+	for i := range tmp {
+		valuesTest[i] = real(tmp[i])
+	}
+
+	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
+
+	s := fmt.Sprintf("Rp. %.3f\n", valuesTest[0])
+
+	return s
+}
+

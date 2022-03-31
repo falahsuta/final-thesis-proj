@@ -21,7 +21,7 @@ export default (props) => {
   const [success, setSuccess] = React.useState(false);
 
   const handleIncrement = () => {
-    if (counter < totalQty) {
+    if (counter < props.totalQty) {
       setCounter((e) => e+1)
     }
   };
@@ -46,8 +46,7 @@ export default (props) => {
     setSuccess(true);
   };
 
-  const price = 14000
-  const totalQty = 13
+
 
     return (
         <>
@@ -58,7 +57,7 @@ export default (props) => {
             <Button disabled style={{textTransform: 'none', color: "white"}}>
               <>
                 <div style={{opacity: 0}}>{"xx"}</div>
-                Total Qty: {totalQty}, Qty: {counter}, Total Price: Rp. {(price*counter).toLocaleString()}
+                Total Qty: {props.totalQty}, Qty: {counter}, Total Price: Rp. {(props.price*counter).toLocaleString()}
                 <div style={{opacity: 0}}>{"xx"}</div>
               </>
             </Button>
@@ -73,7 +72,7 @@ export default (props) => {
               scroll="body"
           >
             <Fade in={open}>
-              <Buy after={handleClose2} totalQty={totalQty} qty={counter} price={price} />
+              <Buy after={handleClose2} totalQty={props.totalQty} qty={counter} price={props.price} />
             </Fade>
           </Dialog>
         </>

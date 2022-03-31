@@ -28,7 +28,7 @@ export default (props) => {
         alignItems="flex-start"
       >
         <Grid item xs={4}>
-          <GridOfCard markProps={props.markProps} customData={left} />
+          <GridOfCard markProps={props.markProps} customData={left} discount={props.discount}/>
         </Grid>
 
         <Grid
@@ -38,7 +38,7 @@ export default (props) => {
             marginLeft: props.tag || props.markProps ? "140px" : "20px",
           }}
         >
-          <GridOfCard markProps={props.markProps} customData={right} />
+          <GridOfCard markProps={props.markProps} customData={right} discount={props.discount} />
         </Grid>
       </Grid>
     </>

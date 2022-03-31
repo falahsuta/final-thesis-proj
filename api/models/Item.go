@@ -29,6 +29,11 @@ type Item struct {
 	Tags        string         `gorm:"size:255;not null;" json:"tags"`
 }
 
+type ItemParams struct {
+	Item        []Item `json:"items"`
+	TotalCounts int64  `json:"total_counts"`
+}
+
 type Pagination struct {
 	Limit int    `json:"limit"`
 	Page  int    `json:"page"`
@@ -95,6 +100,23 @@ func (p *Item) FindAllItems(db *gorm.DB) (*[]Item, error) {
 	return &items, nil
 }
 
+func (p *Item) FindMyItems(db *gorm.DB, pagination *Pagination, uid uint32) (*ItemParams, error) {
+	items := []Item{}
+	offset := (pagination.Page - 1) * pagination.Limit
+	queryBuider := db.Limit(pagination.Limit).Offset(offset).Order(pagination.Sort)
+	result := queryBuider.Model(&Item{}).Where("author_id = ?", uid).Find(&items)
+
+	if result.Error != nil {
+		msg := result.Error
+		return nil, msg
+	}
+
+	var count int64
+	db.Model(&Item{}).Where("author_id = ?", uid).Count(&count)
+
+	return &ItemParams{Item: items, TotalCounts: count}, nil
+}
+
 func (p *Item) FindTopItems(db *gorm.DB) (*[]Item, error) {
 	var err error
 	items := []Item{}
@@ -113,7 +135,7 @@ func (p *Item) FindTopItems(db *gorm.DB) (*[]Item, error) {
 	return &items, nil
 }
 
-func (p *Item) FindAllItemsWithPaginate(db *gorm.DB, pagination *Pagination) (*[]Item, error) {
+func (p *Item) FindAllItemsWithPaginate(db *gorm.DB, pagination *Pagination) (*ItemParams, error) {
 	items := []Item{}
 	offset := (pagination.Page - 1) * pagination.Limit
 	queryBuider := db.Limit(pagination.Limit).Offset(offset).Order(pagination.Sort)
@@ -128,11 +150,15 @@ func (p *Item) FindAllItemsWithPaginate(db *gorm.DB, pagination *Pagination) (*[
 		for i, _ := range items {
 			err := db.Debug().Model(&User{}).Where("id = ?", items[i].AuthorID).Take(&items[i].Author).Error
 			if err != nil {
-				return &[]Item{}, err
+				return &ItemParams{}, err
 			}
 		}
 	}
-	return &items, nil
+
+	var count int64
+	db.Model(&Item{}).Count(&count)
+
+	return &ItemParams{Item: items, TotalCounts: count}, nil
 }
 
 func (p *Item) FindItemByID(db *gorm.DB, pid uint64) (*Item, error) {

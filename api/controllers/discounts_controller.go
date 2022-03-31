@@ -62,6 +62,20 @@ func (server *Server) GetDiscounts(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, discounts)
 }
 
+func (server *Server) GetDiscountsWithPaginate(w http.ResponseWriter, r *http.Request) {
+	discount := models.Discount{}
+	item := models.Item{}
+
+	pagination := item.GeneratePaginationFromRequest(r)
+
+	discounts, err := discount.FindAllItemsWithPaginate(server.DB, &pagination)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK, discounts)
+}
+
 func (server *Server) GetDiscount(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
