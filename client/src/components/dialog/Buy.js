@@ -23,32 +23,9 @@ import Success from "./Success";
 export default (props) => {
   const markProps = "markprops";
 
-  // const items = useSelector((state) => state.contribe);
+  const balance = useSelector((state) => state.balance);
 
-  const items = [
-      {
-        title: "The Big Bang may be a black hole inside another universe",
-        image:
-            "https://images.unsplash.com/photo-1539321908154-04927596764d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1655&q=80",
-        tag: "cool",
-        id: "5f48af7abadaf00740940462",
-        name: "GoGetInfo",
-      },
-      {
-        title: "The Dark Forest Theory of the Universe",
-        image: "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg",
-        tag: "bizzare",
-        id: "5f487bfbafa4a1520807c12b",
-        name: "FastInfo",
-      },
-      {
-        title: "Is the Universe Real? And Experiment Towards",
-        image: "https://miro.medium.com/max/1200/1*zHHvldZopy8y1YcKYez57Q.jpeg",
-        tag: "soul",
-        id: "5f48ac2ebadaf00740940456",
-        name: "FunAndNice",
-      },
-  ]
+
 
   const dispatch = useDispatch();
   const [success, setSuccess] = React.useState(false);
@@ -83,7 +60,7 @@ export default (props) => {
 
             <div style={{marginBottom: "20px"}}>
                 <Typography color="textPrimary" variant="subtitle1" component="h1">
-                    Saldo Anda : Rp. 30.000.000
+                    Saldo Anda : Rp. {balance ? balance : "Activate Your Balance First"}
                 </Typography>
             </div>
 

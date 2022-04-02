@@ -66,6 +66,19 @@ func (server *Server) GetItems(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, items)
 }
 
+func (server *Server) GetTop3Items(w http.ResponseWriter, r *http.Request) {
+	item := models.Item{}
+
+	//pagination := item.GeneratePaginationFromRequest(r)
+
+	items, err := item.FindTopItems(server.DB)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK, items)
+}
+
 func (server *Server) GetItemsWithPagination(w http.ResponseWriter, r *http.Request) {
 	item := models.Item{}
 

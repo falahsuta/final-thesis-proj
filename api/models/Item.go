@@ -120,7 +120,7 @@ func (p *Item) FindMyItems(db *gorm.DB, pagination *Pagination, uid uint32) (*It
 func (p *Item) FindTopItems(db *gorm.DB) (*[]Item, error) {
 	var err error
 	items := []Item{}
-	err = db.Debug().Model(&Item{}).Order("desc total_sold").Limit(3).Find(&items).Error
+	err = db.Debug().Model(&Item{}).Order("total_sold desc").Limit(3).Find(&items).Error
 	if err != nil {
 		return &[]Item{}, err
 	}

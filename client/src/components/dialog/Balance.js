@@ -7,11 +7,15 @@ import Button from "@material-ui/core/Button";
 import CurrencyTextField from "@unicef/material-ui-currency-textfield";
 import Cookies from "js-cookie";
 import axios from "axios";
+import {useDispatch} from "react-redux";
+
+import { setBalanceDispatcher } from "../../actions";
 
 export default (props) => {
     const markProps = "markprops";
 
     const [topup, setTopup] = useState();
+    const dispatch = useDispatch();
     const [balance, setBalance] = useState("Loading ...");
 
     const handleChange = (event) => {
@@ -38,9 +42,12 @@ export default (props) => {
                 config
             );
 
-            console.log(response.data)
+            console.log(response.data["current_balance"])
 
-            setBalance(response.data["current_balance"].toLocaleString())
+            let updated_balance = response.data["current_balance"].toLocaleString().replace("-", "")
+            setBalance(updated_balance)
+
+            dispatch(setBalanceDispatcher(updated_balance))
 
         } catch (err) {
             setBalance("Please Activate the Balance Services")
@@ -105,7 +112,7 @@ export default (props) => {
 
 
     React.useEffect(() => {
-        setTimeout(() => {
+        setTimeout(async () => {
             fetchBalance();
         }, 400)
 

@@ -77,6 +77,7 @@ var items = []models.Item{
 		Price: 30000.00,
 		Images: pq.StringArray{"https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg"},
 		Quantity: 9,
+		TotalSold: 3,
 	},
 	models.Item{
 		Title:   "Title 2",
@@ -84,6 +85,7 @@ var items = []models.Item{
 		Price: 30000.00,
 		Images: pq.StringArray{"https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg"},
 		Quantity: 9,
+		TotalSold: 2,
 	},
 	models.Item{
 		Title:   "Title 3",
@@ -91,6 +93,7 @@ var items = []models.Item{
 		Price: 30000.00,
 		Images: pq.StringArray{"https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg", "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg"},
 		Quantity: 9,
+		TotalSold: 1,
 	},
 	models.Item{
 		Title:   "Title 4",

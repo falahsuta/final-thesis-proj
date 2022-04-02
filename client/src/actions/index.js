@@ -74,11 +74,25 @@ export const signIn = (value) => async (dispatch) => {
     let expires = new Date()
 
     expires.setTime(expires.getTime() + (60 * 60 * 24 * 1000))
+
+    let p = Cookies.get('access_token')
+
+    const config = {
+        headers: {Authorization: `Bearer ${p}`},
+
+    };
+
+    const response2 = await axios.get(
+        "http://localhost:8080/myusers",
+        config
+    );
+
+
     // setCookie('access_token', response.data, { path: '/',  expires})
 
     return {
         type: "SIGNIN_CURRENTUSER",
-        payload: {currentUser: response.data},
+        payload: {currentUser: response2.data},
     };
 };
 
@@ -92,6 +106,11 @@ export const setCredentials = (value) => {
 export const createPost = (value) => async (dispatch) => {
     const response = await axios.post("http://localhost:4002/api/posts", value);
     dispatch({type: "CREATE_POST"});
+};
+
+export const setBalanceDispatcher = (value) => async (dispatch) => {
+
+    dispatch({type: "SET_BALANCE", payload: value});
 };
 
 export const signOut = () => async (dispatch) => {

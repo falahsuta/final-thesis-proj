@@ -66,8 +66,6 @@ export default (props) => {
 
   return (
     <>
-
-
       {topup && topup.discounts && topup.discounts.length > 0 && (
           <Grid container spacing={2} direction="row" justify="center" alignItems="center" style={{margin: "10px"}}>
             <Grid item xs={4} md={4}>

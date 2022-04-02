@@ -29,6 +29,7 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/items", middlewares.SetMiddlewareJSON(s.CreateItem)).Methods("POST")
 	s.Router.HandleFunc("/items", middlewares.SetMiddlewareJSON(s.GetItems)).Methods("GET")
 	s.Router.HandleFunc("/itemsmy", middlewares.SetMiddlewareJSON(s.GetMyItemsWithPagination)).Methods("GET")
+	s.Router.HandleFunc("/itemstop", middlewares.SetMiddlewareJSON(s.GetTop3Items)).Methods("GET")
 	s.Router.HandleFunc("/items/paginate", middlewares.SetMiddlewareJSON(s.GetItemsWithPagination)).Methods("GET")
 	s.Router.HandleFunc("/items/{id}", middlewares.SetMiddlewareJSON(s.GetItem)).Methods("GET")
 	s.Router.HandleFunc("/items/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateItem))).Methods("PUT")

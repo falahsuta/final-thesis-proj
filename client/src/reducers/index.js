@@ -85,6 +85,15 @@ const contribeReducer = (contribe = null, action) => {
   }
 };
 
+const balanceReducer = (balance = null, action) => {
+  switch (action.type) {
+    case "SET_BALANCE":
+      return action.payload;
+    default:
+      return balance;
+  }
+};
+
 
 
 export default combineReducers({
@@ -95,4 +104,5 @@ export default combineReducers({
   contribe: contribeReducer,
   product: productReducer,
   tag: tagReducer,
+  balance: balanceReducer,
 });

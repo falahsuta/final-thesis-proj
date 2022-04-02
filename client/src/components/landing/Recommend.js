@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import Typography from "@material-ui/core/Typography";
 import { Container, requirePropFactory, Card } from "@material-ui/core";
 import Divider from "@material-ui/core/Divider";
@@ -19,44 +19,75 @@ import { useDynamicAvatarStyles } from "@mui-treasury/styles/avatar/dynamic";
 import HorizontalCard from "../card/HorizontalCard";
 import TagCard from "../tag/TagCard";
 import TagCategory from "../tag/TagCategory";
+import Cookies from "js-cookie";
+import axios from "axios";
 
 export default () => {
-  const dataMiddle = [
-    {
-      title: "The Big Bang may be a black hole inside another universe",
-      imglink:
-        "https://images.unsplash.com/photo-1539321908154-04927596764d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1655&q=80",
-      tag: "cool",
-      id: "5f48af7abadaf00740940462",
-      name: "GoGetInfo",
-    },
-    {
-      title: "The Dark Forest Theory of the Universe",
-      imglink: "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg",
-      tag: "bizzare",
-      id: "5f487bfbafa4a1520807c12b",
-      name: "FastInfo",
-    },
-    {
-      title: "Is the Universe Real? And Experiment Towards",
-      imglink: "https://miro.medium.com/max/1200/1*zHHvldZopy8y1YcKYez57Q.jpeg",
-      tag: "soul",
-      id: "5f48ac2ebadaf00740940456",
-      name: "FunAndNice",
-    },
-  ];
-  const datalength = dataMiddle.length - 1;
+    const [dataMiddle, setDataMiddle] = useState([]);
+  // const dataMiddle = [
+  //   {
+  //     title: "The Big Bang may be a black hole inside another universe",
+  //     imglink:
+  //       "https://images.unsplash.com/photo-1539321908154-04927596764d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1655&q=80",
+  //     tag: "cool",
+  //     id: "5f48af7abadaf00740940462",
+  //     name: "GoGetInfo",
+  //   },
+  //   {
+  //     title: "The Dark Forest Theory of the Universe",
+  //     imglink: "https://miro.medium.com/max/1944/1*aLGt-w4m0dhJpAP6K4Abqg.jpeg",
+  //     tag: "bizzare",
+  //     id: "5f487bfbafa4a1520807c12b",
+  //     name: "FastInfo",
+  //   },
+  //   {
+  //     title: "Is the Universe Real? And Experiment Towards",
+  //     imglink: "https://miro.medium.com/max/1200/1*zHHvldZopy8y1YcKYez57Q.jpeg",
+  //     tag: "soul",
+  //     id: "5f48ac2ebadaf00740940456",
+  //     name: "FunAndNice",
+  //   },
+  // ];
+
+    const fetchBalance = async () => {
+        let url = "http://localhost:8080/itemstop"
+
+        try {
+            const response = await axios.get(
+                url,
+            );
+
+            console.log(response.data)
+
+            setDataMiddle(response.data)
+
+        } catch (err) {
+            setDataMiddle([])
+        }
+    }
+
+    React.useEffect(() => {
+        fetchBalance();
+    }, [])
+
+
+
+
+    const datalength = dataMiddle.length - 1;
   const renderMiddle = dataMiddle.map((element, index) => {
     return (
       <>
-        <HorizontalCard
-          title={element.title}
-          imglink={element.imglink}
-          tag={element.tag}
-          reference={element.reference}
-          id={element.id}
-          name={element.name}
-        />
+          <HorizontalCard
+              id={element.id}
+              title={element.title}
+              imglink={element.images[0]}
+              tag={element.tag}
+              name={element.author.nickname}
+              price={element.price}
+              quantity={element.quantity}
+              // markProps={element.markProps}
+              discount={element.discount}
+              />
         <Divider
           style={{
             margin: "13px 0",

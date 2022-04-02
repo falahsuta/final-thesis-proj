@@ -92,7 +92,7 @@ export default (props) => {
         )}
 
         {/* masih error ini kalau kosong */}
-        {topup && topup.items && topup.items.length === 0 && (
+        {topup && topup.items.length === 0 && (
             <Grid
                 container
                 direction="columns"

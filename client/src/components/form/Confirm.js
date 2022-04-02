@@ -8,6 +8,8 @@ import { Container, Typography } from "@material-ui/core";
 import { useSelector } from "react-redux";
 import { createPost } from "../../actions";
 import { useDispatch } from "react-redux";
+import Cookies from "js-cookie";
+import axios from "axios";
 
 // Destructure props
 const Confirm = ({
@@ -22,7 +24,7 @@ const Confirm = ({
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (user.currentUser.id) {
       const value = {
         title,
@@ -31,11 +33,40 @@ const Confirm = ({
         "images": image.split(" "),
         "tag": tag.toLowerCase(),
         "author_id": user.currentUser.id,
-        quantity,
-        price: price.split(".")[0],
+        quantity: parseInt(quantity),
+        price: parseFloat((price.split(".")[0]).replace(",", "")),
       };
 
       console.table(value);
+
+      let p = Cookies.get('access_token')
+
+      const config = {
+        headers: {Authorization: `Bearer ${p}`},
+
+      };
+
+      // console.log(p)
+
+      if (p) {
+        try {
+          const response = await axios.post(
+              "http://localhost:8080/items",
+              value,
+              config,
+          );
+
+          console.log(response.data)
+
+
+        } catch (err) {
+          console.log(err.message())
+        }
+
+
+        // dispatch(createPost(value));
+      }
+
       // dispatch(createPost(value));
     }
   };
