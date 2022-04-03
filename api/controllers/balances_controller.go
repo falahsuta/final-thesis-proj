@@ -104,15 +104,13 @@ func (server *Server) TopupBalances(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//mybalance, err := balance.FindMyBalances(server.DB, uid)
-	//if mybalance.ID == 0 {
-	//	responses.ERROR(w, http.StatusUnprocessableEntity, err)
-	//	return
-	//}
+	mybalance, err := balance.FindMyBalancesNonDec(server.DB, uid)
+	if mybalance.ID == 0 {
+		responses.ERROR(w, http.StatusUnprocessableEntity, err)
+		return
+	}
 
-	//fmt.Println("DEBUG: ", topup.AddedBalance)
-
-	balanceCreated := balance.ProcessTopUp(server.DB, float64(topup.AddedBalance), uid)
+	balanceCreated := balance.ProcessTopUp(server.DB, topup.AddedBalance, uid, mybalance)
 	if err != nil {
 		formattedError := formaterror.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)

@@ -298,6 +298,8 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 	if meta.Discount.PercentCut > 0.0 {
 		//fmt.Println(meta.Discount.PercentCut)
 		//evaluator.MultByConst(ciphertextBuyerBill, meta.Discount.PercentCut, ciphertextBuyerBill)
+
+		// LATER IT WILL BE OPTION
 		evaluator.AddConst(ciphertextBuyerBill, buyerBill[0]*meta.Discount.PercentCut*(-1.00), ciphertextBuyerBill)
 	}
 

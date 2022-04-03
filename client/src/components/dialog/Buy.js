@@ -127,17 +127,16 @@ export default (props) => {
       };
 
       try {
+        // let pricex = parseInt(price*-1)
 
 
         const response = await axios.post(
             url,
             {
-              "added_balance": ((-price))
+              "added_balance": parseFloat(price*(-1.0))
             },
             config,
         )
-
-        // console.log(response.data)
 
 
       } catch (err) {
@@ -180,11 +179,13 @@ export default (props) => {
       "disc_name": discountname
     }
 
-    console.log(price)
 
-    // buyProduct(value)
+
+    buyProduct(value)
     adjustBalance()
 
+
+    setSuccess(true)
   }
 
   const clickApply = async () => {
@@ -219,7 +220,7 @@ export default (props) => {
 
               <div style={{marginBottom: "20px"}}>
                 <Typography color="textPrimary" variant="subtitle1" component="h1">
-                  Saldo Anda : {balance}
+                  Saldo Anda : {balance ? balance.toLocaleString() : ""}
                 </Typography>
               </div>
 
@@ -266,21 +267,21 @@ export default (props) => {
               <div style={{marginLeft: "90px"}}>
                 {balance !== "Please Activate the Balance Services" &&
                 <Button
-                    disabled={balance && parseFloat(balance.replace("Rp. ", "")) > price}
+                    // disabled={balance && parseFloat(balance.replace("Rp. ", "")) > price}
                     onClick={() => showSuccess()} size="medium" style={{height: "40%", marginTop: "55px"}}>
                   Confirm
                   <div style={{opacity: 0}}>{"x"}</div>
                   <Check/>
                 </Button>}
 
-                {balance === "Please Activate the Balance Services" &&
-                <Button
-                    disabled
-                    onClick={() => showSuccess()} size="medium" style={{height: "40%", marginTop: "55px"}}>
-                  Confirm
-                  <div style={{opacity: 0}}>{"x"}</div>
-                  <Check/>
-                </Button>}
+                {/*{balance === "Please Activate the Balance Services" &&*/}
+                {/*<Button*/}
+                {/*    disabled*/}
+                {/*    onClick={() => showSuccess()} size="medium" style={{height: "40%", marginTop: "55px"}}>*/}
+                {/*  Confirm*/}
+                {/*  <div style={{opacity: 0}}>{"x"}</div>*/}
+                {/*  <Check/>*/}
+                {/*</Button>}*/}
               </div>
             </div>)}
       </>

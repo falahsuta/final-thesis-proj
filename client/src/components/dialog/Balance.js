@@ -19,9 +19,11 @@ export default (props) => {
     const [balance, setBalance] = useState("Loading ...");
 
     const handleChange = (event) => {
-        let x = (parseInt(event.target.value))
+        // let x = (parseInt(event.target.value))
 
-        setTopup((x));
+        // console.log(event.target.value)
+
+        setTopup(event.target.value);
     }
 
     const spacing = (num) => {
@@ -83,15 +85,21 @@ export default (props) => {
         };
 
         try {
-            setTopup(0)
+            let x = (topup.split("."))[0];
+            let y = x.replace(",", "");
+
+
+            console.log(y)
 
             const response = await axios.post(
                 url,
                 {
-                    "added_balance": parseFloat(topup)
+                    "added_balance": parseFloat(y)
                 },
                 config,
             )
+
+            // setTopup("0")
 
 
         } catch (err) {
@@ -132,7 +140,7 @@ export default (props) => {
 
                 <div style={{marginBottom: "20px"}}>
                     <Typography color="textPrimary" variant="subtitle1" component="h1">
-                        Saldo Anda : {balance}
+                        Saldo Anda : {balance ? balance.toLocaleString() : ""}
                         {balance === "Please Activate the Balance Services" && (
                             <>
                                 <Button size="small" variant="contained"

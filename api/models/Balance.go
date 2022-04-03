@@ -97,6 +97,18 @@ func (p *Balance) FindMyBalances(db *gorm.DB, uid uint32) (*Balance, error) {
 	return &balances, nil
 }
 
+func (p *Balance) FindMyBalancesNonDec(db *gorm.DB, uid uint32) (*Balance, error) {
+	var err error
+	balances := Balance{}
+	err = db.Debug().Model(&Balance{}).Where("author_id = ?", uid).Find(&balances).Error
+	if err != nil {
+		return &Balance{}, err
+	}
+
+
+	return &balances, nil
+}
+
 func (p *Balance) FindAllBalances(db *gorm.DB) (*[]Balance, error) {
 	var err error
 	balances := []Balance{}
@@ -168,21 +180,17 @@ func (p *Balance) EncOutputFromZeroBalance(secretKey string) string {
 	return str1
 }
 
-func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32) *Balance {
-	mybalance, err := p.FindMyBalances(db, uid)
-	if mybalance.ID == 0 {
-		return &Balance{}
-	}
-
+func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, myBalance *Balance) *Balance {
 	paramLogsGlobalBalance := 1
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
 
 	user := User{}
 	user.FindUserByID(db, uid)
 
+
 	var ciphertext = ckks.NewCiphertext(params, 1, 5, 1.073741824e+09)
 
-	UnmarshalFromBase64(ciphertext, mybalance.CurrentBalance)
+	UnmarshalFromBase64(ciphertext, myBalance.CurrentBalance)
 
 	if err != nil {
 		panic(err)
@@ -201,7 +209,7 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32) *
 
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
-	evaluator.AddConst(ciphertext, (addedConstant), ciphertext)
+	evaluator.AddConst(ciphertext, addedConstant, ciphertext)
 
 	// Encoder
 	encoder := ckks.NewEncoder(params)
@@ -213,13 +221,11 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32) *
 		valuesTest[i] = real(tmp[i])
 	}
 
-	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
-
 	//s := fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
 
 	str1 := MarshalToBase64String(ciphertext)
 
-	err = db.Debug().Model(&Balance{}).Where("id = ?", mybalance.ID).Updates(Balance{CurrentBalance: str1, UpdatedAt: time.Now()}).Error
+	err = db.Debug().Model(&Balance{}).Where("id = ?", myBalance.ID).Updates(Balance{CurrentBalance: str1, UpdatedAt: time.Now()}).Error
 	if err != nil {
 		return &Balance{}
 	}
@@ -269,7 +275,7 @@ func (p *Balance) DecryptFromString(db *gorm.DB, uid uint32, currBalance string)
 
 	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
 
-	s := fmt.Sprintf("Rp. %.3f\n", valuesTest[0])
+	s := fmt.Sprintf("Rp. %.f\n", valuesTest[0])
 
 	return s
 }
