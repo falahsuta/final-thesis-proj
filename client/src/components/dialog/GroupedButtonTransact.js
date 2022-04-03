@@ -51,18 +51,18 @@ export default (props) => {
     return (
         <>
         <ButtonGroup size="small" aria-label="small outlined button group" style={{marginBottom: "20px", marginTop: "15px"}}>
-          <Button onClick={handleIncrement}>+</Button>
-          {counter > 0 && <Button onClick={handleDecrement}>-</Button>}
+          {/*<Button onClick={handleIncrement}>+</Button>*/}
+          {/*{counter > 0 && <Button onClick={handleDecrement}>-</Button>}*/}
           {counter > 0 &&
             <Button disabled style={{textTransform: 'none', color: "white"}}>
               <>
                 <div style={{opacity: 0}}>{"xx"}</div>
-                Total Qty: {props.totalQty}, Qty: {counter}, Total Price: Rp. {(props.price*counter).toLocaleString()}
+                Informasi Produk: Total Qty: {props.totalQty}, Price: Rp. {(props.price*counter).toLocaleString()}
                 <div style={{opacity: 0}}>{"xx"}</div>
               </>
             </Button>
           }
-          {counter > 0 && <Button onClick={handleOpen}>Buy <ShoppingCart style={{marginLeft: "8px", color: "#D4D4D4"}} /></Button>}
+          {/*{counter > 0 && <Button onClick={handleOpen}>Buy <ShoppingCart style={{marginLeft: "8px", color: "#D4D4D4"}} /></Button>}*/}
         </ButtonGroup>
           <Dialog
               maxWidth
@@ -72,7 +72,7 @@ export default (props) => {
               scroll="body"
           >
             <Fade in={open}>
-              <Buy after={handleClose2} totalQty={props.totalQty} qty={counter} price={props.price} product={props.product} />
+              <Buy after={handleClose2} totalQty={props.totalQty} qty={counter} price={props.price} />
             </Fade>
           </Dialog>
         </>

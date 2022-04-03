@@ -45,6 +45,11 @@ func (server *Server) CreateTransactWithDisc(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
+	if uid != transact.AuthorID {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
+		return
+	}
+
 	transact.InsertID(uid)
 	transactCreated, err := transact.SaveItemWithDisc(server.DB, transactMeta)
 
@@ -133,7 +138,9 @@ func (server *Server) GetMyTransact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transactReceived, err := transact.FindItemByUID(server.DB, uid)
+	pagination := transact.GeneratePaginationFromRequest(r)
+
+	transactReceived, err := transact.FindItemByUID(server.DB, uid, pagination)
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
@@ -240,4 +247,8 @@ func (server *Server) DeleteTransact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Entity", fmt.Sprintf("%d", pid))
 	responses.JSON(w, http.StatusNoContent, "")
 }
+
+
+
+
 

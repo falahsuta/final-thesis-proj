@@ -8,7 +8,7 @@ import Typography from "@material-ui/core/Typography";
 import { Info } from "@mui-treasury/components/info";
 import { useD01InfoStyles } from "@mui-treasury/styles/info/d01";
 
-import Picks from "../card/Picks";
+import PicksTransacts from "../card/PicksTransacts";
 import { getContributePost, closeContribe } from "../../actions";
 
 import ButtonGroup from "@material-ui/core/ButtonGroup";
@@ -31,7 +31,7 @@ export default (props) => {
   };
 
   const fetchActivate = async () => {
-    let url = `http://localhost:8080/itemsmy?limit=3&page=${currPage}`
+    let url = `http://localhost:8080/transactsmy?limit=3&page=${currPage}`
     let p = Cookies.get('access_token')
 
     const config = {
@@ -64,21 +64,23 @@ export default (props) => {
 
 
 
+
+
   return (
       <>
-        {topup && topup["items"] && topup["items"].length > 0 && (
+        {topup && topup["transacts"] && topup["transacts"].length > 0 && (
             <Grid container spacing={2} direction="row" justify="center" alignItems="center" style={{margin: "10px"}}>
               <Grid item xs={4} md={4}>
                 <Info useStyles={useD01InfoStyles} style={{marginLeft: "10px"}}>
                   <Typography color="textPrimary" variant="h5" component="h2">
-                    {"Your Inventory".toUpperCase()}
+                    {"Your Transaction".toUpperCase()}
                   </Typography>
                   {spacing("10px")}
                 </Info>
               </Grid>
               <Grid item xs={4} md={4}>
-                <div style={{marginLeft: "-40px"}}>
-                  <Picks items={topup["items"]} markProps={markProps} />
+                <div style={{marginLeft: "-10px"}}>
+                  <PicksTransacts items={topup["transacts"]} markProps={markProps} />
                 </div>
               </Grid>
               <Grid item xs={3} md={3}>
@@ -92,7 +94,7 @@ export default (props) => {
         )}
 
         {/* masih error ini kalau kosong */}
-        {topup && topup.items.length === 0 && (
+        {topup && topup.transacts.length === 0 && (
             <Grid
                 container
                 direction="columns"

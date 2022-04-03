@@ -57,7 +57,7 @@ export default () => {
                 url,
             );
 
-            console.log(response.data)
+            // console.log(response.data)
 
             setDataMiddle(response.data)
 

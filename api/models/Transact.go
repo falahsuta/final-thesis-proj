@@ -8,7 +8,9 @@ import (
 	"github.com/tuneinsight/lattigo/v3/ckks"
 	"github.com/tuneinsight/lattigo/v3/ring"
 	"github.com/tuneinsight/lattigo/v3/rlwe"
+	"net/http"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -34,6 +36,11 @@ type TransactMeta struct {
 type TransactMetaParams struct {
 	Discount     Discount
 	TransactMeta TransactMeta
+}
+
+type TransactParams struct {
+	Transact    []Transact `json:"transacts"`
+	TotalCounts int64      `json:"total_counts"`
 }
 
 func (p *Transact) TableName() string {
@@ -163,19 +170,29 @@ func (p *Transact) FindItemByID(db *gorm.DB, pid uint64) (*Transact, error) {
 	return p, nil
 }
 
-func (p *Transact) FindItemByUID(db *gorm.DB, uid uint32) (*Transact, error) {
-	var err error
-	err = db.Debug().Model(&Item{}).Where("author_id = ?", uid).Take(&p).Error
-	if err != nil {
-		return &Transact{}, err
+func (p *Transact) FindItemByUID(db *gorm.DB, uid uint32, pagination Pagination) (*TransactParams, error) {
+	transacts := []Transact{}
+	offset := (pagination.Page - 1) * pagination.Limit
+	queryBuider := db.Limit(pagination.Limit).Offset(offset).Order(pagination.Sort)
+	result := queryBuider.Model(&Transact{}).Where("author_id = ?", uid).Find(&transacts)
+
+	if result.Error != nil {
+		msg := result.Error
+		return nil, msg
 	}
-	if p.ID != 0 {
-		err = db.Debug().Model(&User{}).Where("id = ?", p.AuthorID).Take(&p.Author).Error
-		if err != nil {
-			return &Transact{}, err
-		}
+
+	var count int64
+	db.Model(&Transact{}).Where("author_id = ?", uid).Count(&count)
+
+	for e, _ := range transacts {
+		x := p.DecryptPerDataForBuyerMeta(db, uid, transacts[e].BuyerMeta)
+		y := p.DecryptPerDataForBuyerTotalBill(db, uid, transacts[e].BuyerTotalBill)
+
+		transacts[e].BuyerMeta = x
+		transacts[e].BuyerTotalBill = y
 	}
-	return p, nil
+
+	return &TransactParams{Transact: transacts, TotalCounts: count}, nil
 }
 
 func (p *Transact) UpdateAnItem(db *gorm.DB) (*Transact, error) {
@@ -224,7 +241,7 @@ var GlobalEncParams = ckks.ParametersLiteral{
 }
 
 func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) (string, string) {
-	paramLogsGlobalBuyerMeta := 2
+	paramLogsGlobalBuyerMeta := 3
 	paramLogsGlobalBuyerBill := 1
 
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
@@ -250,11 +267,12 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 	// Buyer Meta
 	buyerMeta := make([]float64, paramLogsGlobalBuyerMeta)
 	buyerMeta[0] = float64(meta.TransactMeta.ProductID)
-	buyerMeta[1] = float64(meta.Discount.ID)
+	buyerMeta[1] = float64(meta.TransactMeta.Quantity)
+	buyerMeta[2] = float64(meta.Discount.ID)
 
 	// Buyer Bill
 	buyerBill := make([]float64, paramLogsGlobalBuyerBill)
-	buyerBill[0] = float64(meta.TransactMeta.Product.Price)
+	buyerBill[0] = float64(meta.TransactMeta.Product.Price * float64(meta.TransactMeta.Quantity))
 
 	// Encoder
 	encoder := ckks.NewEncoder(params)
@@ -268,8 +286,8 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 	var ciphertextBuyerBill *ckks.Ciphertext
 	ciphertextBuyerMeta = encryptor.EncryptNew(plaintextBuyerMeta)
 
-	fmt.Println("LEVEL: ", ciphertextBuyerMeta.Level())
-	fmt.Println("SCALE: ", ciphertextBuyerMeta.Scale)
+	//fmt.Println("LEVEL: ", ciphertextBuyerMeta.Level())
+	//fmt.Println("SCALE: ", ciphertextBuyerMeta.Scale)
 	//fmt.Println("SCALEing(): ", ciphertextBuyerBill.ScalingFactor())
 
 	ciphertextBuyerBill = encryptor.EncryptNew(plaintextBuyerBill)
@@ -279,7 +297,8 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 
 	if meta.Discount.PercentCut > 0.0 {
 		//fmt.Println(meta.Discount.PercentCut)
-		evaluator.MultByConst(ciphertextBuyerBill, meta.Discount.PercentCut, ciphertextBuyerBill)
+		//evaluator.MultByConst(ciphertextBuyerBill, meta.Discount.PercentCut, ciphertextBuyerBill)
+		evaluator.AddConst(ciphertextBuyerBill, buyerBill[0]*meta.Discount.PercentCut*(-1.00), ciphertextBuyerBill)
 	}
 
 	if meta.Discount.FixedCut > 0.0 {
@@ -297,8 +316,9 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 		valuesTest[i] = real(tmpBuyerMeta[i])
 	}
 
-	//fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
-	//fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[1])
+	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
+	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[1])
+	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[2])
 
 	// Value Assignment from Decryption
 	valuesTest2 := make([]float64, len(tmpBuyerBill))
@@ -306,7 +326,7 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 		valuesTest2[i] = real(tmpBuyerBill[i])
 	}
 
-	//fmt.Printf("ValuesTest: %.3f ...\n", valuesTest2[0])
+	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest2[0])
 
 	str1 := MarshalToBase64String(ciphertextBuyerMeta)
 	str2 := MarshalToBase64String(ciphertextBuyerBill)
@@ -355,3 +375,113 @@ func MarshalToBase64String(bm encoding.BinaryMarshaler) string {
 	}
 	return base64.StdEncoding.EncodeToString(b)
 }
+
+func (p *Transact) GeneratePaginationFromRequest(r *http.Request) Pagination {
+	// Initializing default
+	limit := 2
+	page := 1
+	sort := "id asc"
+	query := r.URL.Query()
+
+	for key, value := range query {
+		queryValue := value[len(value)-1]
+		switch key {
+		case "limit":
+			limit, _ = strconv.Atoi(queryValue)
+			break
+		case "page":
+			page, _ = strconv.Atoi(queryValue)
+			break
+		case "sort":
+			sort = queryValue
+			break
+
+		}
+	}
+	return Pagination{
+		Limit: limit,
+		Page:  page,
+		Sort:  sort,
+	}
+}
+
+func (p *Transact) DecryptPerDataForBuyerMeta(db *gorm.DB, uid uint32, buyerMeta string) string {
+	user := User{}
+	user.FindUserByID(db, uid)
+
+	paramLogsGlobalBalance := 3
+	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
+
+	var ciphertext = ckks.NewCiphertext(params, 1, 5, 1.073741824e+09)
+
+	UnmarshalFromBase64(ciphertext, buyerMeta)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Secret Key Generation
+	sk := ckks.NewSecretKey(params)
+	_ = UnmarshalFromBase64(sk, user.SecretKey)
+
+	// Decryptor
+	decryptor := ckks.NewDecryptor(params, sk)
+
+	// Encoder
+	encoder := ckks.NewEncoder(params)
+	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
+
+	// Value Assignment from Decryption
+	valuesTest := make([]float64, len(tmp))
+	for i := range tmp {
+		valuesTest[i] = real(tmp[i])
+	}
+
+	//fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
+
+	s := fmt.Sprintf("%.3f,%.3f,%.3f", valuesTest[0], valuesTest[1], valuesTest[2])
+
+	return s
+
+}
+
+func (p *Transact) DecryptPerDataForBuyerTotalBill(db *gorm.DB, uid uint32, buyerTotalBill string) string {
+	user := User{}
+	user.FindUserByID(db, uid)
+
+	paramLogsGlobalBalance := 1
+	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
+
+	var ciphertext = ckks.NewCiphertext(params, 1, 5, 1.073741824e+09)
+
+	UnmarshalFromBase64(ciphertext, buyerTotalBill)
+
+	if err != nil {
+		panic(err)
+	}
+
+	// Secret Key Generation
+	sk := ckks.NewSecretKey(params)
+	_ = UnmarshalFromBase64(sk, user.SecretKey)
+
+	// Decryptor
+	decryptor := ckks.NewDecryptor(params, sk)
+
+	// Encoder
+	encoder := ckks.NewEncoder(params)
+	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
+
+	// Value Assignment from Decryption
+	valuesTest := make([]float64, len(tmp))
+	for i := range tmp {
+		valuesTest[i] = real(tmp[i])
+	}
+
+	//fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
+
+	s := fmt.Sprintf("%.3f", valuesTest[0])
+
+	return s
+
+}
+

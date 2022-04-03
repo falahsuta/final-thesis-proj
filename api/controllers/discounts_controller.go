@@ -94,6 +94,28 @@ func (server *Server) GetDiscount(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, discountReceived)
 }
 
+func (server *Server) GetDiscountByName(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	pid, _ := vars["name"]
+
+	fmt.Println(vars)
+	fmt.Println(pid)
+	//if err != nil {
+	//	responses.ERROR(w, http.StatusBadRequest, err)
+	//	return
+	//}
+	discount := models.Discount{}
+
+	discountReceived, err := discount.FindItemByName(server.DB, pid)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusOK, discountReceived)
+}
+
 func (server *Server) UpdateDiscount(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)

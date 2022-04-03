@@ -168,7 +168,12 @@ func (p *Balance) EncOutputFromZeroBalance(secretKey string) string {
 	return str1
 }
 
-func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, currentBalance string, uid uint32, mybalance Balance) *Balance {
+func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32) *Balance {
+	mybalance, err := p.FindMyBalances(db, uid)
+	if mybalance.ID == 0 {
+		return &Balance{}
+	}
+
 	paramLogsGlobalBalance := 1
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
 
@@ -177,7 +182,7 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, currentBalanc
 
 	var ciphertext = ckks.NewCiphertext(params, 1, 5, 1.073741824e+09)
 
-	UnmarshalFromBase64(ciphertext, currentBalance)
+	UnmarshalFromBase64(ciphertext, mybalance.CurrentBalance)
 
 	if err != nil {
 		panic(err)
@@ -229,7 +234,7 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, currentBalanc
 }
 
 
-func (p *Balance) DecryptFromString(db *gorm.DB,uid uint32, currBalance string) string {
+func (p *Balance) DecryptFromString(db *gorm.DB, uid uint32, currBalance string) string {
 	paramLogsGlobalBalance := 1
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
 
@@ -251,10 +256,6 @@ func (p *Balance) DecryptFromString(db *gorm.DB,uid uint32, currBalance string) 
 
 	// Decryptor
 	decryptor := ckks.NewDecryptor(params, sk)
-
-
-
-
 
 	// Encoder
 	encoder := ckks.NewEncoder(params)

@@ -16,7 +16,7 @@ import ReplyTag from "../reply/ReplyTag";
 import Comment from "../reply/Comment";
 import ReplyField from "../reply/ReplyField";
 
-import GroupedButtons from "./GroupedButton";
+import GroupedButtonTransact from "./GroupedButtonTransact";
 import ImageList from "./ImageList";
 import Cookies from "js-cookie";
 import axios from "axios";
@@ -35,9 +35,37 @@ export default (props) => {
   const [post, setPost] = useState();
   const [showReply, setShowReply] = useState(false);
 
+  const [discountObj, setDiscountObj] = useState();
+
   const replyTrueIfClicked = () => {
     setShowReply(!showReply);
   };
+
+  const fetchDiscount = async () => {
+    let url = `http://localhost:8080/discounts/${parseInt(props.discountId)}`
+    let p = Cookies.get('access_token')
+
+    const config = {
+      headers: {Authorization: `Bearer ${p}`},
+    };
+
+    try {
+      const response = await axios.get(
+          url,
+          config
+      );
+
+      setDiscountObj(response.data)
+
+      console.log(response.data)
+    } catch (err) {
+
+    }
+  }
+
+  React.useEffect(() => {
+    fetchDiscount();
+  }, [])
 
   const fetchItem = async () => {
     let url = `http://localhost:8080/items/${props.id}`
@@ -102,6 +130,34 @@ export default (props) => {
               align="justify"
             >
               {post ? post.content : ""}
+
+              <br />
+              <div style={{marginTop: "30px"}}></div>
+              <Typography variant="h7" color="textPrimary">
+              Informasi Pembelian:
+              </Typography>
+              <br />
+              <div style={{marginTop: "5px"}}></div>
+              {(props.discountId == 0) ? (
+                  <>
+                    Discount: No Discount Usage
+                  </>
+              ) : discountObj && (
+                  <>
+
+                    Discount Code: {discountObj.name}, Percent Cut: {discountObj.percent_cut*100}%, Fixed Cut: Rp. {discountObj.fixed_cut.toLocaleString()}
+                  </>
+              )}
+
+
+              <div style={{marginTop: "5px"}}></div>
+
+
+              {/*<br />*/}
+
+                Total Pembayaran: {`Rp. ${props.totalBuyPrice}`}, Unit Pembelian: {props.totalQty}
+
+
             </Typography>
 
             <br />
@@ -126,37 +182,17 @@ export default (props) => {
                     </>
                 ) : (
                   <>
-                    {post.price && <GroupedButtons totalQty={post.quantity} price={post.price} product={post} />}
+                    {post.price && <GroupedButtonTransact totalQty={post.quantity} price={post.price}/>}
 
-                    {/*<ReplyTag buttonText="" action={replyTrueIfClicked}>*/}
-                    {/*  /!*<ReplyRoundedIcon />*!/*/}
-                    {/*</ReplyTag>*/}
-
-                    {/*<ReplyTag*/}
-                    {/*  buttonText={getRandom().toString()}*/}
-                    {/*  widthSpec={30}*/}
-                    {/*  // disableRipple={true}*/}
-                    {/*>*/}
-                      {/*<KeyboardArrowUpOutlinedIcon />*/}
-
-                    {/*</ReplyTag>*/}
                   </>
                 )}
               </Grid>
             )}
             <Divider />
-            {/*<br />*/}
 
-            {/*<Typography gutterBottom variant="h6" component="h3">*/}
-            {/*  {`${*/}
-            {/*    post.comments.length > 0*/}
-            {/*      ? "Comments"*/}
-            {/*      : "Be The First to Comment"*/}
-            {/*  }`}*/}
-            {/*</Typography>*/}
           </Container>
 
-          {/*{post && <Comment comment={post.comments} />}*/}
+
         </CardContent>
       ) : undefined}
 

@@ -50,6 +50,7 @@ func (s *Server) initializeRoutes() {
 	//Discounts routes
 	s.Router.HandleFunc("/discounts", middlewares.SetMiddlewareJSON(s.CreateDiscount)).Methods("POST")
 	s.Router.HandleFunc("/discounts", middlewares.SetMiddlewareJSON(s.GetDiscounts)).Methods("GET")
+	s.Router.HandleFunc("/discountsbyname/{name}", middlewares.SetMiddlewareJSON(s.GetDiscountByName)).Methods("GET")
 	s.Router.HandleFunc("/discountspaginate", middlewares.SetMiddlewareJSON(s.GetDiscountsWithPaginate)).Methods("GET")
 	s.Router.HandleFunc("/discounts/{id}", middlewares.SetMiddlewareJSON(s.GetDiscount)).Methods("GET")
 	s.Router.HandleFunc("/discounts/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateDiscount))).Methods("PUT")
@@ -58,6 +59,7 @@ func (s *Server) initializeRoutes() {
 	//Transacts routes
 	s.Router.HandleFunc("/transacts", middlewares.SetMiddlewareJSON(s.CreateTransactWithDisc)).Methods("POST")
 	s.Router.HandleFunc("/transacts", middlewares.SetMiddlewareJSON(s.GetTransacts)).Methods("GET")
+	s.Router.HandleFunc("/transactsmy", middlewares.SetMiddlewareJSON(s.GetMyTransact)).Methods("GET")
 	s.Router.HandleFunc("/transacts/{id}", middlewares.SetMiddlewareJSON(s.GetTransact)).Methods("GET")
 	s.Router.HandleFunc("/transacts/{id}", middlewares.SetMiddlewareJSON(middlewares.SetMiddlewareAuthentication(s.UpdateTransact))).Methods("PUT")
 	s.Router.HandleFunc("/transacts/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteTransact)).Methods("DELETE")
