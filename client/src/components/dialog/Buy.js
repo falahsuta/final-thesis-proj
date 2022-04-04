@@ -36,6 +36,7 @@ export default (props) => {
     id: 0,
     fee: 0,
     percent: 0,
+    wholy: "false",
   });
 
   const [success, setSuccess] = React.useState(false);
@@ -94,16 +95,25 @@ export default (props) => {
         setDiscounted(response.data)
         setSuccessButton("Applied")
 
-        setDiscountedObj({fee: response.data.fixed_cut, percent: response.data.percent_cut, id: response.data.id})
+        setDiscountedObj({fee: response.data.fixed_cut, percent: response.data.percent_cut, id: response.data.id, wholy: response.data.wholy})
 
         const percentAdjustment = price*response.data.percent_cut;
 
-
-        if ((parseFloat(price) - percentAdjustment - response.data.fixed_cut) <= 0) {
-          setPrice(0)
+        if (response.data.wholy == "true") {
+          if ((percentAdjustment - response.data.fixed_cut) <= 0) {
+            setPrice(0)
+          } else {
+            setPrice(percentAdjustment - response.data.fixed_cut)
+          }
         } else {
-          setPrice(parseFloat(price) - percentAdjustment - response.data.fixed_cut)
+          if ((parseFloat(price) - percentAdjustment - response.data.fixed_cut) <= 0) {
+            setPrice(0)
+          } else {
+            setPrice(parseFloat(price) - percentAdjustment - response.data.fixed_cut)
+          }
         }
+
+
 
       } else {
         setSuccessButton("Not Found")
@@ -267,7 +277,7 @@ export default (props) => {
                   {successButton}
                 </Button>
               </Grid>
-              Percentage Cut: {discountedObj.percent*100}%, Fixed Cut: Rp. {discountedObj.fee}
+              Percentage Cut: {discountedObj.percent*100}%, Fixed Cut: Rp. {discountedObj.fee} {discountedObj.wholy === "true" ? ", Whole Opts: Yes" : ""}
 
 
               <div style={{marginLeft: "90px"}}>

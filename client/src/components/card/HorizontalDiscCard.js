@@ -108,6 +108,11 @@ export default (props) => {
                             <Typography variant="caption" color="textSecondary">
                                 Percentage cutoff: <Typography variant="caption" color="textPrimary">{(props.el.percent_cut*100)}%</Typography>, Fixed cutoff: <Typography variant="caption" color="textPrimary">Rp. {props.el.fixed_cut}</Typography>
                             </Typography>
+                            <br />
+                            {props.el.wholy == "true" && <Typography variant="caption" color="textSecondary">
+                                Whole Options: <Typography variant="caption"
+                                                               color="textPrimary">Yes</Typography>
+                            </Typography>}
                             {/*<Typography variant="caption" color="textPrimary">*/}
                             {/*    {`t/${props.tag}`}*/}
                             {/*</Typography>*/}

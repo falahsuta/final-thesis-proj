@@ -15,6 +15,12 @@ var discounts = []models.Discount{
 		FixedCut: 4000.00,
 	},
 	models.Discount{
+		Name: "DISCOUNT30S",
+		PercentCut: 0.3,
+		FixedCut: 4000.00,
+		Wholy: "true",
+	},
+	models.Discount{
 		Name: "DISCOUNT50",
 		PercentCut: 0.5,
 		FixedCut: 0.0,

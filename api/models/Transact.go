@@ -296,11 +296,11 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
 
 	if meta.Discount.PercentCut > 0.0 {
-		//fmt.Println(meta.Discount.PercentCut)
-		//evaluator.MultByConst(ciphertextBuyerBill, meta.Discount.PercentCut, ciphertextBuyerBill)
-
-		// LATER IT WILL BE OPTION
-		evaluator.AddConst(ciphertextBuyerBill, buyerBill[0]*meta.Discount.PercentCut*(-1.00), ciphertextBuyerBill)
+		if meta.Discount.Wholy == "true" {
+			evaluator.MultByConst(ciphertextBuyerBill, meta.Discount.PercentCut, ciphertextBuyerBill)
+		} else {
+			evaluator.AddConst(ciphertextBuyerBill, buyerBill[0]*meta.Discount.PercentCut*(-1.00), ciphertextBuyerBill)
+		}
 	}
 
 	if meta.Discount.FixedCut > 0.0 {

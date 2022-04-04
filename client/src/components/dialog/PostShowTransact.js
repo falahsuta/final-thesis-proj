@@ -145,7 +145,7 @@ export default (props) => {
               ) : discountObj && (
                   <>
 
-                    Discount Code: {discountObj.name}, Percent Cut: {discountObj.percent_cut*100}%, Fixed Cut: Rp. {discountObj.fixed_cut.toLocaleString()}
+                    Discount Code: {discountObj.name}, Percent Cut: {discountObj.percent_cut*100}%, Fixed Cut: Rp. {discountObj.fixed_cut.toLocaleString()}, Whole Opts: {discountObj.wholy == "true" ? "Yes" : " No"}
                   </>
               )}
 
