@@ -99,12 +99,13 @@ func (server *Server) GetDiscountByName(w http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	pid, _ := vars["name"]
 
-	fmt.Println(vars)
-	fmt.Println(pid)
+	//fmt.Println(vars)
+	//fmt.Println(pid)
 	//if err != nil {
 	//	responses.ERROR(w, http.StatusBadRequest, err)
 	//	return
 	//}
+
 	discount := models.Discount{}
 
 	discountReceived, err := discount.FindItemByName(server.DB, pid)

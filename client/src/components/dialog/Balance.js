@@ -122,7 +122,7 @@ export default (props) => {
     React.useEffect(() => {
         setTimeout(async () => {
             fetchBalance();
-        }, 400)
+        }, 200)
 
     }, [balance])
 
@@ -140,7 +140,7 @@ export default (props) => {
 
                 <div style={{marginBottom: "20px"}}>
                     <Typography color="textPrimary" variant="subtitle1" component="h1">
-                        Saldo Anda : {balance ? balance.toLocaleString() : ""}
+                        Saldo Anda : {(!isNaN(parseFloat(balance.replace("Rp. ", "")))) ? "Rp. " + parseFloat(balance.replace("Rp. ", "")).toLocaleString() : ""}
                         {balance === "Please Activate the Balance Services" && (
                             <>
                                 <Button size="small" variant="contained"

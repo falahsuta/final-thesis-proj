@@ -219,9 +219,15 @@ export default (props) => {
 
 
               <div style={{marginBottom: "20px"}}>
-                <Typography color="textPrimary" variant="subtitle1" component="h1">
-                  Saldo Anda : {balance ? balance.toLocaleString() : ""}
-                </Typography>
+                {balance && balance !== "Please Activate the Balance Services" && <Typography color="textPrimary" variant="subtitle1" component="h1">
+                  {/*Saldo Anda : {balance ? balance : "Activate Your Balance Services"}*/}
+                  Saldo Anda : {balance ? "Rp. " + parseFloat(balance.replace("Rp. ", "")).toLocaleString() : "Activate Your Balance Services"}
+                </Typography>}
+
+                {balance && balance == "Please Activate the Balance Services" && <Typography color="textPrimary" variant="subtitle1" component="h1">
+                  {/*Saldo Anda : {balance ? balance : "Activate Your Balance Services"}*/}
+                  Saldo Anda : Activate Your Balance Services
+                </Typography>}
               </div>
 
               <div style={{marginBottom: "20px"}}>
@@ -267,7 +273,7 @@ export default (props) => {
               <div style={{marginLeft: "90px"}}>
                 {balance !== "Please Activate the Balance Services" &&
                 <Button
-                    // disabled={balance && parseFloat(balance.replace("Rp. ", "")) > price}
+                    disabled={balance && parseFloat(balance.replace("Rp. ", "")) < price}
                     onClick={() => showSuccess()} size="medium" style={{height: "40%", marginTop: "55px"}}>
                   Confirm
                   <div style={{opacity: 0}}>{"x"}</div>

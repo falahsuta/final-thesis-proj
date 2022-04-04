@@ -11,6 +11,7 @@ type Discount struct {
 	Name       string    `gorm:"size:255;not null;unique" json:"name"`
 	PercentCut float64   `sql:"type:float" json:"percent_cut"`
 	FixedCut   float64   `sql:"type:float" json:"fixed_cut"`
+	Wholy	   string	 `gorm:"size:255;not null" json:"wholy"`
 	CreatedAt  time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt  time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
