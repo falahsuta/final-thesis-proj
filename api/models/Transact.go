@@ -99,6 +99,45 @@ func (p *Transact) SaveItemWithDisc(db *gorm.DB, meta TransactMeta) (*Transact, 
 	return p, nil
 }
 
+func (p *Transact) SaveItemWithDiscWithoutHE(db *gorm.DB, meta TransactMeta) (*Transact, error) {
+	var err error
+
+	user := User{}
+	user.FindUserByID(db, p.AuthorID)
+
+	product := Item{}
+	product.FindItemByID(db, meta.ProductID)
+
+	meta.Product = product
+
+	discount := Discount{}
+	discount.FindItemByName(db, meta.DiscName)
+
+	metaParams := TransactMetaParams{
+		TransactMeta: meta,
+		Discount:     discount,
+	}
+
+	buyerMeta, BuyerTotalBill := p.EncOutputFromMetaWithoutHE(metaParams)
+
+	p.BuyerMeta = buyerMeta
+	p.BuyerTotalBill = BuyerTotalBill
+
+	err = db.Debug().Model(&Transact{}).Create(&p).Error
+
+	if err != nil {
+		return &Transact{}, err
+	}
+	if p.ID != 0 {
+		err = db.Debug().Model(&User{}).Where("id = ?", p.AuthorID).Take(&p.Author).Error
+		if err != nil {
+			return &Transact{}, err
+		}
+	}
+
+	return p, nil
+}
+
 func (p *Transact) SaveItem(db *gorm.DB) (*Transact, error) {
 	var err error
 	err = db.Debug().Model(&Transact{}).Create(&p).Error
@@ -191,6 +230,24 @@ func (p *Transact) FindItemByUID(db *gorm.DB, uid uint32, pagination Pagination)
 		transacts[e].BuyerMeta = x
 		transacts[e].BuyerTotalBill = y
 	}
+
+	return &TransactParams{Transact: transacts, TotalCounts: count}, nil
+}
+
+func (p *Transact) FindItemByUIDWithoutHE(db *gorm.DB, uid uint32, pagination Pagination) (*TransactParams, error) {
+	transacts := []Transact{}
+	offset := (pagination.Page - 1) * pagination.Limit
+	queryBuider := db.Limit(pagination.Limit).Offset(offset).Order(pagination.Sort)
+	result := queryBuider.Model(&Transact{}).Where("author_id = ?", uid).Find(&transacts)
+
+	if result.Error != nil {
+		msg := result.Error
+		return nil, msg
+	}
+
+	var count int64
+	db.Model(&Transact{}).Where("author_id = ?", uid).Count(&count)
+
 
 	return &TransactParams{Transact: transacts, TotalCounts: count}, nil
 }
@@ -318,9 +375,9 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 		valuesTest[i] = real(tmpBuyerMeta[i])
 	}
 
-	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
-	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[1])
-	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[2])
+	fmt.Printf("[CreateTransact] ProdId ValuesTest: %.3f ...\n", valuesTest[0])
+	fmt.Printf("[CreateTransact] Qty ValuesTest: %.3f ...\n", valuesTest[1])
+	fmt.Printf("[CreateTransact] DiscId ValuesTest: %.3f ...\n", valuesTest[2])
 
 	// Value Assignment from Decryption
 	valuesTest2 := make([]float64, len(tmpBuyerBill))
@@ -328,7 +385,7 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 		valuesTest2[i] = real(tmpBuyerBill[i])
 	}
 
-	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest2[0])
+	fmt.Printf("[CreateTransact] TotalTransact ValuesTest: %.3f ...\n", valuesTest2[0])
 
 	str1 := MarshalToBase64String(ciphertextBuyerMeta)
 	str2 := MarshalToBase64String(ciphertextBuyerBill)
@@ -342,6 +399,28 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 	//fmt.Println(len(str2))
 
 	return str1, str2
+}
+
+func (p *Transact) EncOutputFromMetaWithoutHE(meta TransactMetaParams) (string, string) {
+	buyerBillBeforeDisc := meta.TransactMeta.Product.Price * float64(meta.TransactMeta.Quantity)
+
+	if meta.Discount.PercentCut > 0.0 {
+		if meta.Discount.Wholy == "true" {
+			buyerBillBeforeDisc *= meta.Discount.PercentCut
+		} else {
+			discTot := buyerBillBeforeDisc*meta.Discount.PercentCut
+			buyerBillBeforeDisc -= discTot
+		}
+	}
+
+	if meta.Discount.FixedCut > 0.0 {
+		buyerBillBeforeDisc -= meta.Discount.FixedCut
+	}
+
+	buyerBillNonHE := fmt.Sprintf("%f", buyerBillBeforeDisc)
+	buyerMetaNonHE := fmt.Sprintf("%d,%d,%d", meta.TransactMeta.ProductID, meta.TransactMeta.Quantity, meta.Discount.ID)
+
+	return buyerBillNonHE, buyerMetaNonHE
 }
 
 func Secrecy() string {

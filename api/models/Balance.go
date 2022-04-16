@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/tuneinsight/lattigo/v3/ckks"
 	"github.com/tuneinsight/lattigo/v3/rlwe"
+	"strconv"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -44,7 +45,24 @@ func (p *Balance) StartAndUpdate(db *gorm.DB, uid uint32) {
 	user := User{}
 	user.FindUserByID(db, uid)
 
+	//start := time.Now()
+
 	p.CurrentBalance = p.EncOutputFromZeroBalance(user.SecretKey)
+
+	//duration := time.Since(start)
+	//fmt.Println("[LOG] Enc Zero Balance ", duration)
+}
+
+func (p *Balance) StartAndUpdateWithoutHE(db *gorm.DB, uid uint32) {
+	p.Author = User{}
+	p.CreatedAt = time.Now()
+	p.UpdatedAt = time.Now()
+	p.AuthorID = uid
+
+	user := User{}
+	user.FindUserByID(db, uid)
+
+	p.CurrentBalance = "0"
 }
 
 func (p *Balance) Validate() error {
@@ -129,7 +147,6 @@ func (p *Balance) FindAllBalances(db *gorm.DB) (*[]Balance, error) {
 
 func (p *Balance) EncOutputFromZeroBalance(secretKey string) string {
 	paramLogsGlobalBalance := 1
-	fmt.Println(secretKey)
 
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
 	if err != nil {
@@ -175,7 +192,7 @@ func (p *Balance) EncOutputFromZeroBalance(secretKey string) string {
 		valuesTest[i] = real(tmp[i])
 	}
 
-	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
+	fmt.Printf("[ActivateBalance]: ValuesTest: %.3f ...\n", valuesTest[0])
 
 	return str1
 }
@@ -186,7 +203,6 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 
 	user := User{}
 	user.FindUserByID(db, uid)
-
 
 	var ciphertext = ckks.NewCiphertext(params, 1, 5, 1.073741824e+09)
 
@@ -239,6 +255,26 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 	return &Balance{CurrentBalance: str1, UpdatedAt: time.Now()}
 }
 
+func (p *Balance) ProcessTopUpWithoutHE(db *gorm.DB, addedConstant float64, uid uint32, myBalance *Balance) *Balance {
+	f, _ := strconv.ParseFloat(myBalance.CurrentBalance, 64)
+	f += addedConstant
+
+	currentAddedBalance := fmt.Sprintf("%f", f)
+
+	err := db.Debug().Model(&Balance{}).Where("id = ?", myBalance.ID).Updates(Balance{CurrentBalance: currentAddedBalance, UpdatedAt: time.Now()}).Error
+	if err != nil {
+		return &Balance{}
+	}
+	if p.ID != 0 {
+		err = db.Debug().Model(&User{}).Where("id = ?", p.AuthorID).Take(&p.Author).Error
+		if err != nil {
+			return &Balance{}
+		}
+	}
+
+	return &Balance{CurrentBalance: currentAddedBalance, UpdatedAt: time.Now()}
+}
+
 
 func (p *Balance) DecryptFromString(db *gorm.DB, uid uint32, currBalance string) string {
 	paramLogsGlobalBalance := 1
@@ -273,7 +309,7 @@ func (p *Balance) DecryptFromString(db *gorm.DB, uid uint32, currBalance string)
 		valuesTest[i] = real(tmp[i])
 	}
 
-	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
+	fmt.Printf("[GetBalance]: ValuesTest: %.3f ...\n", valuesTest[0])
 
 	s := fmt.Sprintf("Rp. %.f\n", valuesTest[0])
 

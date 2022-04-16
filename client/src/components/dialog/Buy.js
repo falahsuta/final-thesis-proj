@@ -113,8 +113,6 @@ export default (props) => {
           }
         }
 
-
-
       } else {
         setSuccessButton("Not Found")
       }
@@ -138,8 +136,6 @@ export default (props) => {
 
       try {
         // let pricex = parseInt(price*-1)
-
-
         const response = await axios.post(
             url,
             {
@@ -178,9 +174,6 @@ export default (props) => {
     }
   }
 
-
-
-
   const showSuccess = () => {
     const value = {
       "author_id": user.currentUser.id,
@@ -189,11 +182,8 @@ export default (props) => {
       "disc_name": discountname
     }
 
-
-
     buyProduct(value)
     adjustBalance()
-
 
     setSuccess(true)
   }
@@ -209,8 +199,6 @@ export default (props) => {
   React.useEffect(() => {
     fetchBalance();
   }, [balance])
-
-
 
   return (
       <>

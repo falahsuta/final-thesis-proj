@@ -63,6 +63,54 @@ func (server *Server) CreateTransactWithDisc(w http.ResponseWriter, r *http.Requ
 	responses.JSON(w, http.StatusCreated, transact)
 }
 
+func (server *Server) CreateTransactWithDiscWithoutHE(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		responses.ERROR(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+	transact := models.Transact{}
+	transactMeta := models.TransactMeta{}
+
+	err = json.Unmarshal(body, &transact)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	err = json.Unmarshal(body, &transactMeta)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	transact.Prepare()
+
+	uid, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+
+	if uid != transact.AuthorID {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New(http.StatusText(http.StatusUnauthorized)))
+		return
+	}
+
+	transact.InsertID(uid)
+	transactCreated, err := transact.SaveItemWithDiscWithoutHE(server.DB, transactMeta)
+
+	if err != nil {
+		formattedError := formaterror.FormatError(err.Error())
+		responses.ERROR(w, http.StatusInternalServerError, formattedError)
+		return
+	}
+
+	w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.URL.Path, transactCreated.ID))
+	responses.JSON(w, http.StatusCreated, transact)
+}
+
 func (server *Server) CreateTransact(w http.ResponseWriter, r *http.Request) {
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -147,6 +195,27 @@ func (server *Server) GetMyTransact(w http.ResponseWriter, r *http.Request) {
 	}
 	responses.JSON(w, http.StatusOK, transactReceived)
 }
+
+func (server *Server) GetMyTransactWithoutHE(w http.ResponseWriter, r *http.Request) {
+	transact := models.Transact{}
+
+	//CHeck if the auth token is valid and  get the user id from it
+	uid, err := auth.ExtractTokenID(r)
+	if err != nil {
+		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
+		return
+	}
+
+	pagination := transact.GeneratePaginationFromRequest(r)
+
+	transactReceived, err := transact.FindItemByUIDWithoutHE(server.DB, uid, pagination)
+	if err != nil {
+		responses.ERROR(w, http.StatusInternalServerError, err)
+		return
+	}
+	responses.JSON(w, http.StatusOK, transactReceived)
+}
+
 
 func (server *Server) UpdateTransact(w http.ResponseWriter, r *http.Request) {
 
