@@ -12,7 +12,7 @@ const BASE_URL = 'http://localhost:8080'
 
 export const options = {
     vus: 1,
-    duration: '1s',
+    duration: '3s',
     thresholds: {
         lower_than_2s: [{
             threshold: 'rate>0.75',
@@ -25,17 +25,19 @@ export function setup() {
     const authParams = {
         headers: { 'Content-Type': 'application/json' },
     }
-
-    const authPayload = {
-        email: 'user1@example.com',
-        password: 'password',
-        nickname: 'user1'
-    }
-
-    http.post(`${BASE_URL}/users`, JSON.stringify(authPayload), authParams)
+    //
+    // const authPayload = {
+    //     email: 'user1@example.com',
+    //     password: 'password',
+    //     nickname: 'user1'
+    // }
+    //
+    // http.post(`${BASE_URL}/users`, JSON.stringify(authPayload), authParams)
 
     const loginPayload = {
-        email: 'user1@example.com',
+        // email: 'user1@example.com',
+        // password: 'password',
+        email: 'steven@gmail.com',
         password: 'password',
     }
 
@@ -50,7 +52,7 @@ export function setup() {
         }
     }
 
-    let activateBalanceFirst = http.post(`${BASE_URL}/mybalances/activate`, JSON.stringify({}), params)
+    // let activateBalanceFirst = http.post(`${BASE_URL}/mybalances/activate`, JSON.stringify({}), params)
 
     return {
         params: params,
@@ -61,15 +63,28 @@ export default function(data) {
 
     // const res = http.get(`${BASE_URL}/mybalances/check`, data.params)
 
+    let transPayload = {
+        "author_id": 1,
+        "product_id": 1,
+        "qty": 2,
+        "disc_name": "DISCOUNT30"
+    }
+
+    // console.log(transPayload)
+    // console.log(data.params.toString())
+
+    const res = http.post(`${BASE_URL}/testtransacts`, JSON.stringify(transPayload), data.params)
+
+    console.log("Ea")
     // console.log(res.body)
 
-    // check(res, {
-    //     'is success': (r) => r.json().success,
-    //     'duration below 2s': r => r.timings.duration < 2000
-    // })
-    //
-    // lowerThan2sRate.add(res.timings.duration < 2000)
-    // durationInSeconds.add(res.timings.duration / 1000)
+    check(res, {
+        'is success': (r) => r.json().success,
+        'duration below 2s': r => r.timings.duration < 2000
+    })
+
+    lowerThan2sRate.add(res.timings.duration < 2000)
+    durationInSeconds.add(res.timings.duration / 1000)
 
 
 

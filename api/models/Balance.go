@@ -201,12 +201,21 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 	paramLogsGlobalBalance := 1
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
 
+
+
 	user := User{}
 	user.FindUserByID(db, uid)
 
+	//duration := time.Since(start)
+	//fmt.Println("[LOG] Enc Zero Balance ", duration)
+
 	var ciphertext = ckks.NewCiphertext(params, 1, 5, 1.073741824e+09)
 
+	startDecode := time.Now()
 	UnmarshalFromBase64(ciphertext, myBalance.CurrentBalance)
+
+	duration := time.Since(startDecode)
+	fmt.Println("[LOG] Decode ", duration)
 
 	if err != nil {
 		panic(err)

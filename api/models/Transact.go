@@ -283,8 +283,8 @@ func (p *Transact) DeleteAItem(db *gorm.DB, pid uint64, uid uint32) (int64, erro
 
 // Utils
 var GlobalEncParams = ckks.ParametersLiteral{
-	LogN:     5,
-	LogSlots: 4,
+	LogN:     4,
+	LogSlots: 3,
 	Q: []uint64{0x1fffec001, // 33 + 5 x 30
 		0x3fff4001,
 		0x3ffe8001,
@@ -319,7 +319,7 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 	encryptor := ckks.NewEncryptor(params, pk)
 
 	// Decryptor
-	decryptor := ckks.NewDecryptor(params, sk)
+	//decryptor := ckks.NewDecryptor(params, sk)
 
 	// Buyer Meta
 	buyerMeta := make([]float64, paramLogsGlobalBuyerMeta)
@@ -365,30 +365,41 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 		evaluator.AddConst(ciphertextBuyerBill, float64(meta.Discount.FixedCut)*(-1.00), ciphertextBuyerBill)
 	}
 
-	// Decryption Testing
-	tmpBuyerMeta := encoder.Decode(decryptor.DecryptNew(ciphertextBuyerMeta), paramLogsGlobalBuyerMeta)
-	tmpBuyerBill := encoder.Decode(decryptor.DecryptNew(ciphertextBuyerBill), paramLogsGlobalBuyerBill)
+	//emp := MarshalToBase64String(ciphertextBuyerMeta)
+	////fmt.Println("Size In Bytes:", len(emp))
+	//
+	//// Decryption Testing
+	//tmpBuyerMeta := encoder.Decode(decryptor.DecryptNew(ciphertextBuyerMeta), paramLogsGlobalBuyerMeta)
+	//tmpBuyerBill := encoder.Decode(decryptor.DecryptNew(ciphertextBuyerBill), paramLogsGlobalBuyerBill)
+	//
+	//// Value Assignment from Decryption
+	//valuesTest := make([]float64, len(tmpBuyerMeta))
+	//for i := range tmpBuyerMeta {
+	//	valuesTest[i] = real(tmpBuyerMeta[i])
+	//}
+	//
+	//fmt.Printf("[CreateTransact] ProdId ValuesTest: %.3f ...\n", valuesTest[0])
+	//fmt.Printf("[CreateTransact] Qty ValuesTest: %.3f ...\n", valuesTest[1])
+	//fmt.Printf("[CreateTransact] DiscId ValuesTest: %.3f ...\n", valuesTest[2])
 
 	// Value Assignment from Decryption
-	valuesTest := make([]float64, len(tmpBuyerMeta))
-	for i := range tmpBuyerMeta {
-		valuesTest[i] = real(tmpBuyerMeta[i])
-	}
+	//valuesTest2 := make([]float64, len(tmpBuyerBill))
+	//for i := range tmpBuyerBill {
+	//	valuesTest2[i] = real(tmpBuyerBill[i])
+	//}
 
-	fmt.Printf("[CreateTransact] ProdId ValuesTest: %.3f ...\n", valuesTest[0])
-	fmt.Printf("[CreateTransact] Qty ValuesTest: %.3f ...\n", valuesTest[1])
-	fmt.Printf("[CreateTransact] DiscId ValuesTest: %.3f ...\n", valuesTest[2])
+	//fmt.Printf("[CreateTransact] TotalTransact ValuesTest: %.3f ...\n", valuesTest2[0])
 
-	// Value Assignment from Decryption
-	valuesTest2 := make([]float64, len(tmpBuyerBill))
-	for i := range tmpBuyerBill {
-		valuesTest2[i] = real(tmpBuyerBill[i])
-	}
-
-	fmt.Printf("[CreateTransact] TotalTransact ValuesTest: %.3f ...\n", valuesTest2[0])
+	startConvert := time.Now()
 
 	str1 := MarshalToBase64String(ciphertextBuyerMeta)
 	str2 := MarshalToBase64String(ciphertextBuyerBill)
+
+	durationConvert := time.Since(startConvert)
+	fmt.Println("[LOG] Convert: ", durationConvert)
+
+	//str1 := ""
+	//str2 := ""
 
 	//f, _ := os.Create("data4.txt")
 	//defer f.Close()
