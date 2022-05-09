@@ -4,14 +4,17 @@ import (
 	"encoding"
 	"encoding/base64"
 	"errors"
+	"finalthesisproject/api/config"
 	"fmt"
-	"github.com/tuneinsight/lattigo/v3/ckks"
-	"github.com/tuneinsight/lattigo/v3/ring"
-	"github.com/tuneinsight/lattigo/v3/rlwe"
 	"net/http"
 	"reflect"
 	"strconv"
 	"time"
+
+	"github.com/tuneinsight/lattigo/v3/ckks"
+	"github.com/tuneinsight/lattigo/v3/ckks/bootstrapping"
+	"github.com/tuneinsight/lattigo/v3/ring"
+	"github.com/tuneinsight/lattigo/v3/rlwe"
 
 	"github.com/jinzhu/gorm"
 )
@@ -248,7 +251,6 @@ func (p *Transact) FindItemByUIDWithoutHE(db *gorm.DB, uid uint32, pagination Pa
 	var count int64
 	db.Model(&Transact{}).Where("author_id = ?", uid).Count(&count)
 
-
 	return &TransactParams{Transact: transacts, TotalCounts: count}, nil
 }
 
@@ -419,7 +421,7 @@ func (p *Transact) EncOutputFromMetaWithoutHE(meta TransactMetaParams) (string, 
 		if meta.Discount.Wholy == "true" {
 			buyerBillBeforeDisc *= meta.Discount.PercentCut
 		} else {
-			discTot := buyerBillBeforeDisc*meta.Discount.PercentCut
+			discTot := buyerBillBeforeDisc * meta.Discount.PercentCut
 			buyerBillBeforeDisc -= discTot
 		}
 	}
@@ -436,6 +438,10 @@ func (p *Transact) EncOutputFromMetaWithoutHE(meta TransactMetaParams) (string, 
 
 func Secrecy() string {
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
+	if config.GetBootstrappingMode() == "on" {
+		paramSet := bootstrapping.DefaultParametersSparse[0]
+		params, err = ckks.NewParametersFromLiteral(paramSet.SchemeParams)
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -576,4 +582,3 @@ func (p *Transact) DecryptPerDataForBuyerTotalBill(db *gorm.DB, uid uint32, buye
 	return s
 
 }
-
