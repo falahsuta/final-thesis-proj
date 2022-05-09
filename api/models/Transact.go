@@ -64,7 +64,10 @@ func (p *Transact) InsertID(id uint32) {
 }
 
 func (p *Transact) SaveItemWithDisc(db *gorm.DB, meta TransactMeta) (*Transact, error) {
-	var err error
+	var (
+		err                       error
+		buyerMeta, BuyerTotalBill string
+	)
 
 	user := User{}
 	user.FindUserByID(db, p.AuthorID)
@@ -82,7 +85,11 @@ func (p *Transact) SaveItemWithDisc(db *gorm.DB, meta TransactMeta) (*Transact, 
 		Discount:     discount,
 	}
 
-	buyerMeta, BuyerTotalBill := p.EncOutputFromMeta(metaParams, user.SecretKey)
+	if config.GetBootstrappingMode() == "on" {
+		buyerMeta, BuyerTotalBill = p.EncOutputFromMetaBootstrap(metaParams, user.SecretKey)
+	} else {
+		buyerMeta, BuyerTotalBill = p.EncOutputFromMeta(metaParams, user.SecretKey)
+	}
 
 	p.BuyerMeta = buyerMeta
 	p.BuyerTotalBill = BuyerTotalBill
@@ -299,6 +306,8 @@ var GlobalEncParams = ckks.ParametersLiteral{
 	RingType:     ring.Standard,
 }
 
+var BootstrapEncParams = bootstrapping.DefaultParametersSparse[0]
+
 func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) (string, string) {
 	paramLogsGlobalBuyerMeta := 3
 	paramLogsGlobalBuyerBill := 1
@@ -350,6 +359,11 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 	//fmt.Println("SCALEing(): ", ciphertextBuyerBill.ScalingFactor())
 
 	ciphertextBuyerBill = encryptor.EncryptNew(plaintextBuyerBill)
+	if config.GetNTTMode() != "on" && ciphertextBuyerBill != nil {
+		for _, pol := range ciphertextBuyerBill.Value {
+			pol.IsNTT = false
+		}
+	}
 
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
@@ -366,6 +380,136 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 		//fmt.Println(float64(meta.Discount.FixedCut)*(-1.00))
 		evaluator.AddConst(ciphertextBuyerBill, float64(meta.Discount.FixedCut)*(-1.00), ciphertextBuyerBill)
 	}
+
+	//emp := MarshalToBase64String(ciphertextBuyerMeta)
+	////fmt.Println("Size In Bytes:", len(emp))
+	//
+	//// Decryption Testing
+	//tmpBuyerMeta := encoder.Decode(decryptor.DecryptNew(ciphertextBuyerMeta), paramLogsGlobalBuyerMeta)
+	//tmpBuyerBill := encoder.Decode(decryptor.DecryptNew(ciphertextBuyerBill), paramLogsGlobalBuyerBill)
+	//
+	//// Value Assignment from Decryption
+	//valuesTest := make([]float64, len(tmpBuyerMeta))
+	//for i := range tmpBuyerMeta {
+	//	valuesTest[i] = real(tmpBuyerMeta[i])
+	//}
+	//
+	//fmt.Printf("[CreateTransact] ProdId ValuesTest: %.3f ...\n", valuesTest[0])
+	//fmt.Printf("[CreateTransact] Qty ValuesTest: %.3f ...\n", valuesTest[1])
+	//fmt.Printf("[CreateTransact] DiscId ValuesTest: %.3f ...\n", valuesTest[2])
+
+	// Value Assignment from Decryption
+	//valuesTest2 := make([]float64, len(tmpBuyerBill))
+	//for i := range tmpBuyerBill {
+	//	valuesTest2[i] = real(tmpBuyerBill[i])
+	//}
+
+	//fmt.Printf("[CreateTransact] TotalTransact ValuesTest: %.3f ...\n", valuesTest2[0])
+
+	startConvert := time.Now()
+
+	str1 := MarshalToBase64String(ciphertextBuyerMeta)
+	str2 := MarshalToBase64String(ciphertextBuyerBill)
+
+	durationConvert := time.Since(startConvert)
+	fmt.Println("[LOG] Convert: ", durationConvert)
+
+	//str1 := ""
+	//str2 := ""
+
+	//f, _ := os.Create("data4.txt")
+	//defer f.Close()
+	//data := []byte(str2)
+	//_, _ = f.Write(data)
+
+	//fmt.Println(len(str1))
+	//fmt.Println(len(str2))
+
+	return str1, str2
+}
+
+func (p *Transact) EncOutputFromMetaBootstrap(meta TransactMetaParams, secretKey string) (string, string) {
+	paramLogsGlobalBuyerMeta := 3
+	paramLogsGlobalBuyerBill := 1
+
+	paramSet := BootstrapEncParams
+	params, err := ckks.NewParametersFromLiteral(paramSet.SchemeParams)
+	if err != nil {
+		panic(err)
+	}
+
+	// Secret Key Generation
+	sk := ckks.NewSecretKey(params)
+	_ = UnmarshalFromBase64(sk, secretKey)
+
+	// Evaluator Key Generation
+	kgen := ckks.NewKeyGenerator(params)
+	pk := kgen.GenPublicKey(sk)
+	btpParams := paramSet.BootstrappingParams
+	evk := bootstrapping.GenEvaluationKeys(btpParams, params, sk)
+	btp, err := bootstrapping.NewBootstrapper(params, btpParams, evk)
+	if err != nil {
+		panic(err)
+	}
+
+	// Encryptor
+	encryptor := ckks.NewEncryptor(params, pk)
+
+	// Decryptor
+	//decryptor := ckks.NewDecryptor(params, sk)
+
+	// Buyer Meta
+	buyerMeta := make([]float64, paramLogsGlobalBuyerMeta)
+	buyerMeta[0] = float64(meta.TransactMeta.ProductID)
+	buyerMeta[1] = float64(meta.TransactMeta.Quantity)
+	buyerMeta[2] = float64(meta.Discount.ID)
+
+	// Buyer Bill
+	buyerBill := make([]float64, paramLogsGlobalBuyerBill)
+	buyerBill[0] = float64(meta.TransactMeta.Product.Price * float64(meta.TransactMeta.Quantity))
+
+	// Encoder
+	encoder := ckks.NewEncoder(params)
+
+	// Plaintext Generation
+	plaintextBuyerMeta := encoder.EncodeNew(buyerMeta, params.MaxLevel(), params.DefaultScale(), paramLogsGlobalBuyerMeta)
+	plaintextBuyerBill := encoder.EncodeNew(buyerBill, params.MaxLevel(), params.DefaultScale(), paramLogsGlobalBuyerBill)
+
+	// Cipher Text Operation
+	var ciphertextBuyerMeta *ckks.Ciphertext
+	var ciphertextBuyerBill *ckks.Ciphertext
+	if config.GetNTTMode() != "on" && ciphertextBuyerBill != nil {
+		for _, pol := range ciphertextBuyerBill.Value {
+			pol.IsNTT = false
+		}
+	}
+	ciphertextBuyerMeta = encryptor.EncryptNew(plaintextBuyerMeta)
+
+	//fmt.Println("LEVEL: ", ciphertextBuyerMeta.Level())
+	//fmt.Println("SCALE: ", ciphertextBuyerMeta.Scale)
+	//fmt.Println("SCALEing(): ", ciphertextBuyerBill.ScalingFactor())
+
+	ciphertextBuyerBill = encryptor.EncryptNew(plaintextBuyerBill)
+
+	// Evaluator
+	evaluator := ckks.NewEvaluator(params, evk.EvaluationKey)
+
+	if meta.Discount.PercentCut > 0.0 {
+		if meta.Discount.Wholy == "true" {
+			evaluator.MultByConst(ciphertextBuyerBill, meta.Discount.PercentCut, ciphertextBuyerBill)
+		} else {
+			evaluator.AddConst(ciphertextBuyerBill, buyerBill[0]*meta.Discount.PercentCut*(-1.00), ciphertextBuyerBill)
+		}
+	}
+
+	if meta.Discount.FixedCut > 0.0 {
+		//fmt.Println(float64(meta.Discount.FixedCut)*(-1.00))
+		evaluator.AddConst(ciphertextBuyerBill, float64(meta.Discount.FixedCut)*(-1.00), ciphertextBuyerBill)
+	}
+
+	evaluator.SetScale(ciphertextBuyerBill, params.DefaultScale())
+	ciphertextBootstrap := btp.Bootstrapp(ciphertextBuyerBill)
+	ciphertextBuyerBill = ciphertextBootstrap
 
 	//emp := MarshalToBase64String(ciphertextBuyerMeta)
 	////fmt.Println("Size In Bytes:", len(emp))
@@ -439,7 +583,7 @@ func (p *Transact) EncOutputFromMetaWithoutHE(meta TransactMetaParams) (string, 
 func Secrecy() string {
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
 	if config.GetBootstrappingMode() == "on" {
-		paramSet := bootstrapping.DefaultParametersSparse[0]
+		paramSet := BootstrapEncParams
 		params, err = ckks.NewParametersFromLiteral(paramSet.SchemeParams)
 	}
 	if err != nil {
@@ -508,9 +652,14 @@ func (p *Transact) DecryptPerDataForBuyerMeta(db *gorm.DB, uid uint32, buyerMeta
 	user.FindUserByID(db, uid)
 
 	paramLogsGlobalBalance := 3
-	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
 
-	var ciphertext = ckks.NewCiphertext(params, 1, 5, 1.073741824e+09)
+	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
+	if config.GetBootstrappingMode() == "on" {
+		paramSet := BootstrapEncParams
+		params, err = ckks.NewParametersFromLiteral(paramSet.SchemeParams)
+	}
+
+	ciphertext := ckks.NewCiphertext(params, params.MaxLevel(), len(params.Q()), params.DefaultScale())
 
 	UnmarshalFromBase64(ciphertext, buyerMeta)
 
@@ -549,8 +698,12 @@ func (p *Transact) DecryptPerDataForBuyerTotalBill(db *gorm.DB, uid uint32, buye
 
 	paramLogsGlobalBalance := 1
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
+	if config.GetBootstrappingMode() == "on" {
+		paramSet := BootstrapEncParams
+		params, err = ckks.NewParametersFromLiteral(paramSet.SchemeParams)
+	}
 
-	var ciphertext = ckks.NewCiphertext(params, 1, 5, 1.073741824e+09)
+	ciphertext := ckks.NewCiphertext(params, params.MaxLevel(), len(params.Q()), params.DefaultScale())
 
 	UnmarshalFromBase64(ciphertext, buyerTotalBill)
 

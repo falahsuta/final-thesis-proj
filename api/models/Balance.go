@@ -209,7 +209,7 @@ func (p *Balance) EncOutputFromZeroBalance(secretKey string) string {
 func (p *Balance) EncOutputFromZeroBalanceBootstrap(secretKey string) string {
 	paramLogsGlobalBalance := 1
 
-	paramSet := bootstrapping.DefaultParametersSparse[0]
+	paramSet := BootstrapEncParams
 	params, err := ckks.NewParametersFromLiteral(paramSet.SchemeParams)
 	if err != nil {
 		panic(err)
@@ -269,7 +269,7 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 
 	var ciphertext = ckks.NewCiphertext(params, params.MaxLevel(), len(params.Q()), params.DefaultScale())
 
-	if config.GetNTTMode() != "on" {
+	if config.GetNTTMode() != "on" && ciphertext != nil {
 		for _, pol := range ciphertext.Value {
 			pol.IsNTT = false
 		}
@@ -332,7 +332,7 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 
 	user := User{}
 	user.FindUserByID(db, uid)
-	paramSet := bootstrapping.DefaultParametersSparse[0]
+	paramSet := BootstrapEncParams
 	params, err := ckks.NewParametersFromLiteral(paramSet.SchemeParams)
 	if err != nil {
 		panic(err)
@@ -348,7 +348,7 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 		panic(err)
 	}
 
-	if config.GetNTTMode() != "on" {
+	if config.GetNTTMode() != "on" && ciphertext != nil {
 		for _, pol := range ciphertext.Value {
 			pol.IsNTT = false
 		}
@@ -376,7 +376,8 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 	//s := fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
 
 	evaluator.SetScale(ciphertext, params.DefaultScale())
-	ciphertext = btp.Bootstrapp(ciphertext)
+	ciphertextBootstrap := btp.Bootstrapp(ciphertext)
+	ciphertext = ciphertextBootstrap
 	str1 := MarshalToBase64String(ciphertext)
 
 	err = db.Debug().Model(&Balance{}).Where("id = ?", myBalance.ID).Updates(Balance{CurrentBalance: str1, UpdatedAt: time.Now()}).Error
@@ -454,7 +455,7 @@ func (p *Balance) DecryptFromString(db *gorm.DB, uid uint32, currBalance string)
 
 func (p *Balance) DecryptFromStringBootstrap(db *gorm.DB, uid uint32, currBalance string) string {
 	paramLogsGlobalBalance := 1
-	paramSet := bootstrapping.DefaultParametersSparse[0]
+	paramSet := BootstrapEncParams
 	params, err := ckks.NewParametersFromLiteral(paramSet.SchemeParams)
 	if err != nil {
 		panic(err)
