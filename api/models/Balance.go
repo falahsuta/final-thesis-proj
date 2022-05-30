@@ -393,19 +393,18 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 	// fmt.Println("ValuesTest: %.3f ...\n", valuesTest[0])
 
 	evaluator.SetScale(ciphertext, params.DefaultScale())
-	ciphertextBootstrap := btp.Bootstrapp(ciphertext)
-	ciphertext = ciphertextBootstrap
+	_ = btp.Bootstrapp(ciphertext)
 
 	// After Value Assignment from Decryption Bootstrap
-	tmp = encoder.Decode(decryptor.DecryptNew(ciphertextBootstrap), paramLogsGlobalBalance)
-	valuesTest = make([]float64, len(tmp))
-	for i := range tmp {
-		valuesTest[i] = real(tmp[i])
-	}
+	// tmp = encoder.Decode(decryptor.DecryptNew(ciphertextBootstrap), paramLogsGlobalBalance)
+	// valuesTest = make([]float64, len(tmp))
+	// for i := range tmp {
+	// 	valuesTest[i] = real(tmp[i])
+	// }
 
-	f, _ = os.Create("./data7.txt")
-	s = fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
-	_, _ = f.WriteString(s)
+	// f, _ = os.Create("./data7.txt")
+	// s = fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
+	// _, _ = f.WriteString(s)
 	str1 := MarshalToBase64String(ciphertext)
 
 	err = db.Debug().Model(&Balance{}).Where("id = ?", myBalance.ID).Updates(Balance{CurrentBalance: str1, UpdatedAt: time.Now()}).Error

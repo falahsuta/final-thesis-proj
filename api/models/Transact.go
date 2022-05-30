@@ -306,7 +306,7 @@ var GlobalEncParams = ckks.ParametersLiteral{
 	RingType:     ring.Standard,
 }
 
-var BootstrapEncParams = bootstrapping.DefaultParametersDense[3]
+var BootstrapEncParams = bootstrapping.DefaultParametersSparse[3]
 
 func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) (string, string) {
 	paramLogsGlobalBuyerMeta := 3
@@ -508,8 +508,7 @@ func (p *Transact) EncOutputFromMetaBootstrap(meta TransactMetaParams, secretKey
 	}
 
 	evaluator.SetScale(ciphertextBuyerBill, params.DefaultScale())
-	ciphertextBootstrap := btp.Bootstrapp(ciphertextBuyerBill)
-	ciphertextBuyerBill = ciphertextBootstrap
+	_ = btp.Bootstrapp(ciphertextBuyerBill)
 
 	//emp := MarshalToBase64String(ciphertextBuyerMeta)
 	////fmt.Println("Size In Bytes:", len(emp))
