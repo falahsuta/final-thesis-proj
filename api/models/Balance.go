@@ -4,6 +4,7 @@ import (
 	"errors"
 	"finalthesisproject/api/config"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -50,7 +51,7 @@ func (p *Balance) StartAndUpdate(db *gorm.DB, uid uint32) {
 
 	//start := time.Now()
 
-	if config.GetBootstrappingMode() == "on" {
+	if config.GetConfig().GetBootstrappingMode() == "on" {
 		p.CurrentBalance = p.EncOutputFromZeroBalanceBootstrap(user.SecretKey)
 	} else {
 		p.CurrentBalance = p.EncOutputFromZeroBalance(user.SecretKey)
@@ -116,7 +117,7 @@ func (p *Balance) FindMyBalances(db *gorm.DB, uid uint32) (*Balance, error) {
 		return &Balance{}, err
 	}
 
-	if config.GetBootstrappingMode() == "on" {
+	if config.GetConfig().GetBootstrappingMode() == "on" {
 		balances.CurrentBalance = p.DecryptFromStringBootstrap(db, uid, balances.CurrentBalance)
 	} else {
 		balances.CurrentBalance = p.DecryptFromString(db, uid, balances.CurrentBalance)
@@ -227,7 +228,7 @@ func (p *Balance) EncOutputFromZeroBalanceBootstrap(secretKey string) string {
 	encryptor := ckks.NewEncryptor(params, pk)
 
 	// Decryptor
-	// decryptor := ckks.NewDecryptor(params, sk)
+	decryptor := ckks.NewDecryptor(params, sk)
 
 	// Buyer Meta
 	buyerMeta := make([]float64, paramLogsGlobalBalance)
@@ -244,15 +245,15 @@ func (p *Balance) EncOutputFromZeroBalanceBootstrap(secretKey string) string {
 
 	str1 := MarshalToBase64String(ciphertext)
 
-	// tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
+	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
 
 	// Value Assignment from Decryption
-	// valuesTest := make([]float64, len(tmp))
-	// for i := range tmp {
-	// 	valuesTest[i] = real(tmp[i])
-	// }
+	valuesTest := make([]float64, len(tmp))
+	for i := range tmp {
+		valuesTest[i] = real(tmp[i])
+	}
 
-	// fmt.Printf("[ActivateBalance]: ValuesTest: %.3f ...\n", valuesTest[0])
+	fmt.Printf("[ActivateBalance]: ValuesTest: %.3f ...\n", valuesTest[0])
 
 	return str1
 }
@@ -269,7 +270,7 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 
 	var ciphertext = ckks.NewCiphertext(params, params.MaxLevel(), len(params.Q()), params.DefaultScale())
 
-	if config.GetNTTMode() != "on" && ciphertext != nil {
+	if config.GetConfig().GetNTTMode() != "on" && ciphertext != nil {
 		for _, pol := range ciphertext.Value {
 			pol.IsNTT = false
 		}
@@ -328,7 +329,7 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 }
 
 func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid uint32, myBalance *Balance) *Balance {
-	// paramLogsGlobalBalance := 1
+	paramLogsGlobalBalance := 1
 
 	user := User{}
 	user.FindUserByID(db, uid)
@@ -348,7 +349,7 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 		panic(err)
 	}
 
-	if config.GetNTTMode() != "on" && ciphertext != nil {
+	if config.GetConfig().GetNTTMode() != "on" && ciphertext != nil {
 		for _, pol := range ciphertext.Value {
 			pol.IsNTT = false
 		}
@@ -357,27 +358,54 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 	UnmarshalFromBase64(ciphertext, myBalance.CurrentBalance)
 
 	// Decryptor
-	// decryptor := ckks.NewDecryptor(params, sk)
+	decryptor := ckks.NewDecryptor(params, sk)
+
+	// Before Value Assignment from Decryption
+	encoder := ckks.NewEncoder(params)
+	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
+	valuesTest := make([]float64, len(tmp))
+	for i := range tmp {
+		valuesTest[i] = real(tmp[i])
+	}
+
+	f, _ := os.Create("./data5.txt")
+	defer f.Close()
+	s := fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
+	_, _ = f.WriteString(s)
 
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, evk.EvaluationKey)
 	evaluator.AddConst(ciphertext, addedConstant, ciphertext)
 
 	// Encoder
-	// encoder := ckks.NewEncoder(params)
-	// tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
+	tmp = encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
 
-	// Value Assignment from Decryption
-	// valuesTest := make([]float64, len(tmp))
-	// for i := range tmp {
-	// 	valuesTest[i] = real(tmp[i])
-	// }
+	// After Value Assignment from Decryption
+	valuesTest = make([]float64, len(tmp))
+	for i := range tmp {
+		valuesTest[i] = real(tmp[i])
+	}
 
-	//s := fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
+	f, _ = os.Create("./data6.txt")
+	s = fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
+	_, _ = f.WriteString(s)
+
+	// fmt.Println("ValuesTest: %.3f ...\n", valuesTest[0])
 
 	evaluator.SetScale(ciphertext, params.DefaultScale())
 	ciphertextBootstrap := btp.Bootstrapp(ciphertext)
 	ciphertext = ciphertextBootstrap
+
+	// After Value Assignment from Decryption Bootstrap
+	tmp = encoder.Decode(decryptor.DecryptNew(ciphertextBootstrap), paramLogsGlobalBalance)
+	valuesTest = make([]float64, len(tmp))
+	for i := range tmp {
+		valuesTest[i] = real(tmp[i])
+	}
+
+	f, _ = os.Create("./data7.txt")
+	s = fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
+	_, _ = f.WriteString(s)
 	str1 := MarshalToBase64String(ciphertext)
 
 	err = db.Debug().Model(&Balance{}).Where("id = ?", myBalance.ID).Updates(Balance{CurrentBalance: str1, UpdatedAt: time.Now()}).Error

@@ -150,7 +150,7 @@ func (server *Server) TopupBalances(w http.ResponseWriter, r *http.Request) {
 	}
 
 	balanceCreated := models.Balance{}
-	if config.GetBootstrappingMode() == "on" {
+	if config.GetConfig().GetBootstrappingMode() == "on" {
 		balance.ProcessTopUpBootstrap(server.DB, topup.AddedBalance, uid, mybalance)
 	} else {
 

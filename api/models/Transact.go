@@ -85,7 +85,7 @@ func (p *Transact) SaveItemWithDisc(db *gorm.DB, meta TransactMeta) (*Transact, 
 		Discount:     discount,
 	}
 
-	if config.GetBootstrappingMode() == "on" {
+	if config.GetConfig().GetBootstrappingMode() == "on" {
 		buyerMeta, BuyerTotalBill = p.EncOutputFromMetaBootstrap(metaParams, user.SecretKey)
 	} else {
 		buyerMeta, BuyerTotalBill = p.EncOutputFromMeta(metaParams, user.SecretKey)
@@ -306,7 +306,7 @@ var GlobalEncParams = ckks.ParametersLiteral{
 	RingType:     ring.Standard,
 }
 
-var BootstrapEncParams = bootstrapping.DefaultParametersSparse[0]
+var BootstrapEncParams = bootstrapping.DefaultParametersDense[3]
 
 func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) (string, string) {
 	paramLogsGlobalBuyerMeta := 3
@@ -359,7 +359,7 @@ func (p *Transact) EncOutputFromMeta(meta TransactMetaParams, secretKey string) 
 	//fmt.Println("SCALEing(): ", ciphertextBuyerBill.ScalingFactor())
 
 	ciphertextBuyerBill = encryptor.EncryptNew(plaintextBuyerBill)
-	if config.GetNTTMode() != "on" && ciphertextBuyerBill != nil {
+	if config.GetConfig().GetNTTMode() != "on" && ciphertextBuyerBill != nil {
 		for _, pol := range ciphertextBuyerBill.Value {
 			pol.IsNTT = false
 		}
@@ -478,7 +478,7 @@ func (p *Transact) EncOutputFromMetaBootstrap(meta TransactMetaParams, secretKey
 	// Cipher Text Operation
 	var ciphertextBuyerMeta *ckks.Ciphertext
 	var ciphertextBuyerBill *ckks.Ciphertext
-	if config.GetNTTMode() != "on" && ciphertextBuyerBill != nil {
+	if config.GetConfig().GetNTTMode() != "on" && ciphertextBuyerBill != nil {
 		for _, pol := range ciphertextBuyerBill.Value {
 			pol.IsNTT = false
 		}
@@ -582,7 +582,7 @@ func (p *Transact) EncOutputFromMetaWithoutHE(meta TransactMetaParams) (string, 
 
 func Secrecy() string {
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
-	if config.GetBootstrappingMode() == "on" {
+	if config.GetConfig().GetBootstrappingMode() == "on" {
 		paramSet := BootstrapEncParams
 		params, err = ckks.NewParametersFromLiteral(paramSet.SchemeParams)
 	}
@@ -654,7 +654,7 @@ func (p *Transact) DecryptPerDataForBuyerMeta(db *gorm.DB, uid uint32, buyerMeta
 	paramLogsGlobalBalance := 3
 
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
-	if config.GetBootstrappingMode() == "on" {
+	if config.GetConfig().GetBootstrappingMode() == "on" {
 		paramSet := BootstrapEncParams
 		params, err = ckks.NewParametersFromLiteral(paramSet.SchemeParams)
 	}
@@ -698,7 +698,7 @@ func (p *Transact) DecryptPerDataForBuyerTotalBill(db *gorm.DB, uid uint32, buye
 
 	paramLogsGlobalBalance := 1
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
-	if config.GetBootstrappingMode() == "on" {
+	if config.GetConfig().GetBootstrappingMode() == "on" {
 		paramSet := BootstrapEncParams
 		params, err = ckks.NewParametersFromLiteral(paramSet.SchemeParams)
 	}
