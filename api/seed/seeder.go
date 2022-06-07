@@ -176,7 +176,7 @@ var tags = []models.Tag{
 
 func Load(db *gorm.DB) {
 
-	err := db.Debug().DropTableIfExists(&models.Post{}, &models.User{}, &models.Item{}, &models.Tag{}, &models.Balance{}, &models.Discount{}, &models.Transact{}, &models.Test{}).Error
+	err := db.Debug().DropTableIfExists(&models.Test{}, &models.Post{}, &models.Item{}, &models.Tag{}, &models.Balance{}, &models.Discount{}, &models.Transact{}, &models.User{}).Error
 	if err != nil {
 		log.Fatalf("cannot drop table: %v", err)
 	}
