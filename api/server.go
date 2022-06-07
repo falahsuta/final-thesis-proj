@@ -23,6 +23,7 @@ func init() {
 
 func Run() {
 
+	port := os.Getenv("PORT")
 	var err error
 	err = godotenv.Load()
 	if err != nil {
@@ -36,6 +37,6 @@ func Run() {
 
 	seed.Load(server.DB)
 
-	server.Run(":8080")
+	server.Run(":" + port)
 
 }
