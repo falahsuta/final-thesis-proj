@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"time"
+	"unsafe"
 
 	"github.com/tuneinsight/lattigo/v3/ckks"
 	"github.com/tuneinsight/lattigo/v3/ckks/bootstrapping"
@@ -157,7 +158,7 @@ func (p *Balance) FindAllBalances(db *gorm.DB) (*[]Balance, error) {
 
 func (p *Balance) EncOutputFromZeroBalance(db *gorm.DB, secretKey string) string {
 	var duration time.Duration
-	var timeNow time.Time
+	timeNow := time.Now()
 	paramLogsGlobalBalance := 1
 
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
@@ -188,9 +189,6 @@ func (p *Balance) EncOutputFromZeroBalance(db *gorm.DB, secretKey string) string
 	encoder := ckks.NewEncoder(params)
 
 	// Plaintext Generation
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
-	}
 	plaintext := encoder.EncodeNew(buyerMeta, params.MaxLevel(), params.DefaultScale(), paramLogsGlobalBalance)
 	if os.Getenv("TEST_MODE") == "on" {
 		duration = time.Since(timeNow)
@@ -199,7 +197,9 @@ func (p *Balance) EncOutputFromZeroBalance(db *gorm.DB, secretKey string) string
 		test.Function = "EncOutputFromZeroBalance"
 		test.Operation = "Encoding"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(plaintext))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
 	}
 
@@ -209,9 +209,6 @@ func (p *Balance) EncOutputFromZeroBalance(db *gorm.DB, secretKey string) string
 
 	str1 := MarshalToBase64String(ciphertext)
 
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
-	}
 	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
 	if os.Getenv("TEST_MODE") == "on" {
 		duration = time.Since(timeNow)
@@ -219,7 +216,9 @@ func (p *Balance) EncOutputFromZeroBalance(db *gorm.DB, secretKey string) string
 		test.Function = "EncOutputFromZeroBalance"
 		test.Operation = "Decoding"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(tmp))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
 	}
 
@@ -236,7 +235,7 @@ func (p *Balance) EncOutputFromZeroBalance(db *gorm.DB, secretKey string) string
 
 func (p *Balance) EncOutputFromZeroBalanceBootstrap(db *gorm.DB, secretKey string) string {
 	var duration time.Duration
-	var timeNow time.Time
+	timeNow := time.Now()
 	paramLogsGlobalBalance := 1
 
 	paramSet := BootstrapEncParams
@@ -267,9 +266,6 @@ func (p *Balance) EncOutputFromZeroBalanceBootstrap(db *gorm.DB, secretKey strin
 	encoder := ckks.NewEncoder(params)
 
 	// Plaintext Generation
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
-	}
 	plaintext := encoder.EncodeNew(buyerMeta, params.MaxLevel(), params.DefaultScale(), paramLogsGlobalBalance)
 	if os.Getenv("TEST_MODE") == "on" {
 		duration = time.Since(timeNow)
@@ -277,7 +273,9 @@ func (p *Balance) EncOutputFromZeroBalanceBootstrap(db *gorm.DB, secretKey strin
 		test.Function = "EncOutputFromZeroBalanceBootstrap"
 		test.Operation = "Encoding"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(plaintext))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
 	}
 
@@ -286,9 +284,6 @@ func (p *Balance) EncOutputFromZeroBalanceBootstrap(db *gorm.DB, secretKey strin
 
 	str1 := MarshalToBase64String(ciphertext)
 
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
-	}
 	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
 	if os.Getenv("TEST_MODE") == "on" {
 		duration = time.Since(timeNow)
@@ -296,7 +291,9 @@ func (p *Balance) EncOutputFromZeroBalanceBootstrap(db *gorm.DB, secretKey strin
 		test.Function = "EncOutputFromZeroBalanceBootstrap"
 		test.Operation = "Decoding"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(tmp))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
 	}
 
@@ -314,7 +311,7 @@ func (p *Balance) EncOutputFromZeroBalanceBootstrap(db *gorm.DB, secretKey strin
 func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, myBalance *Balance) *Balance {
 	// paramLogsGlobalBalance := 1
 	var duration time.Duration
-	var timeNow time.Time
+	timeNow := time.Now()
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
 
 	user := User{}
@@ -354,9 +351,6 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
-	}
 	evaluator.AddConst(ciphertext, addedConstant, ciphertext)
 	if os.Getenv("TEST_MODE") == "on" {
 		duration = time.Since(timeNow)
@@ -364,11 +358,10 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 		test.Function = "ProcessTopup"
 		test.Operation = "AddConst"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(ciphertext))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
-	}
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
 	}
 	evaluator.Rescale(ciphertext, params.DefaultScale(), ciphertext)
 	if os.Getenv("TEST_MODE") == "on" {
@@ -377,7 +370,9 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 		test.Function = "ProcessTopup"
 		test.Operation = "Rescaling"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(ciphertext))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
 	}
 
@@ -410,7 +405,7 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 
 func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid uint32, myBalance *Balance) *Balance {
 	var duration time.Duration
-	var timeNow time.Time
+	timeNow := time.Now()
 	// paramLogsGlobalBalance := 1
 
 	user := User{}
@@ -457,9 +452,6 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, evk.EvaluationKey)
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
-	}
 	evaluator.AddConst(ciphertext, addedConstant, ciphertext)
 	if os.Getenv("TEST_MODE") == "on" {
 		duration = time.Since(timeNow)
@@ -467,11 +459,10 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 		test.Function = "ProcessTopupBootstrap"
 		test.Operation = "AddConst"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(ciphertext))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
-	}
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
 	}
 	evaluator.Rescale(ciphertext, params.DefaultScale(), ciphertext)
 	if os.Getenv("TEST_MODE") == "on" {
@@ -480,7 +471,9 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 		test.Function = "ProcessTopupBootstrap"
 		test.Operation = "Rescaling"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(ciphertext))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
 	}
 
@@ -500,9 +493,6 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 	// fmt.Println("ValuesTest: %.3f ...\n", valuesTest[0])
 
 	evaluator.SetScale(ciphertext, params.DefaultScale())
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
-	}
 	btp.Bootstrapp(ciphertext)
 	if os.Getenv("TEST_MODE") == "on" {
 		duration = time.Since(timeNow)
@@ -510,7 +500,9 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 		test.Function = "ProcessTopupBootstrap"
 		test.Operation = "Bootstrapping"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(ciphertext))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
 	}
 

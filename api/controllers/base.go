@@ -2,13 +2,15 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"log"
 	"net/http"
 
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+
 	"finalthesisproject/api/models"
+
 	_ "github.com/jinzhu/gorm/dialects/mysql"    //mysql database driver
 	_ "github.com/jinzhu/gorm/dialects/postgres" //postgres database driver
 	_ "github.com/jinzhu/gorm/dialects/sqlite"   // sqlite database driver
@@ -63,14 +65,13 @@ func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, D
 }
 
 func (server *Server) Run(addr string) {
-	fmt.Println("Listening to port 8080")
+	fmt.Println("Listening to port " + addr)
 
 	headersOk := handlers.AllowedHeaders([]string{"Accept", "Accept-Language", "Content-Type", "Content-Language", "Origin", "Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 	bearer := handlers.ExposedHeaders([]string{"X-CORS-TEST"})
 	bearer2 := handlers.AllowCredentials()
-
 
 	log.Fatal(http.ListenAndServe(addr, handlers.CORS(headersOk, originsOk, methodsOk, bearer, bearer2)(server.Router)))
 }

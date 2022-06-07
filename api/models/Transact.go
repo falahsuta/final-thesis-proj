@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+	"unsafe"
 
 	"github.com/tuneinsight/lattigo/v3/ckks"
 	"github.com/tuneinsight/lattigo/v3/ckks/bootstrapping"
@@ -311,7 +312,7 @@ var BootstrapEncParams = bootstrapping.DefaultParametersSparse[3]
 
 func (p *Transact) EncOutputFromMeta(db *gorm.DB, meta TransactMetaParams, secretKey string) (string, string) {
 	var duration time.Duration
-	var timeNow time.Time
+	timeNow := time.Now()
 	paramLogsGlobalBuyerMeta := 3
 	paramLogsGlobalBuyerBill := 1
 
@@ -373,9 +374,6 @@ func (p *Transact) EncOutputFromMeta(db *gorm.DB, meta TransactMetaParams, secre
 
 	if meta.Discount.PercentCut > 0.0 {
 		if meta.Discount.Wholy == "true" {
-			if os.Getenv("TEST_MODE") == "on" {
-				timeNow = time.Now()
-			}
 			evaluator.MultByConst(ciphertextBuyerBill, meta.Discount.PercentCut, ciphertextBuyerBill)
 			if os.Getenv("TEST_MODE") == "on" {
 				duration = time.Since(timeNow)
@@ -383,11 +381,10 @@ func (p *Transact) EncOutputFromMeta(db *gorm.DB, meta TransactMetaParams, secre
 				test.Function = "EncOutputFromMeta"
 				test.Operation = "MultConst"
 				test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-				test.Time = duration.Seconds() * 1000000
+				test.Time = float64(duration.Nanoseconds())
+				test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+				timeNow = timeNow.Add(duration - time.Since(timeNow))
 				test.SaveTest(db)
-			}
-			if os.Getenv("TEST_MODE") == "on" {
-				timeNow = time.Now()
 			}
 			evaluator.Rescale(ciphertextBuyerBill, params.DefaultScale(), ciphertextBuyerBill)
 			if os.Getenv("TEST_MODE") == "on" {
@@ -396,13 +393,12 @@ func (p *Transact) EncOutputFromMeta(db *gorm.DB, meta TransactMetaParams, secre
 				test.Function = "EncOutputFromMeta"
 				test.Operation = "Rescaling"
 				test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-				test.Time = duration.Seconds() * 1000000
+				test.Time = float64(duration.Nanoseconds())
+				test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+				timeNow = timeNow.Add(duration - time.Since(timeNow))
 				test.SaveTest(db)
 			}
 		} else {
-			if os.Getenv("TEST_MODE") == "on" {
-				timeNow = time.Now()
-			}
 			evaluator.AddConst(ciphertextBuyerBill, buyerBill[0]*meta.Discount.PercentCut*(-1.00), ciphertextBuyerBill)
 			if os.Getenv("TEST_MODE") == "on" {
 				duration = time.Since(timeNow)
@@ -410,11 +406,10 @@ func (p *Transact) EncOutputFromMeta(db *gorm.DB, meta TransactMetaParams, secre
 				test.Function = "EncOutputFromMeta"
 				test.Operation = "AddConst"
 				test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-				test.Time = duration.Seconds() * 1000000
+				test.Time = float64(duration.Nanoseconds())
+				test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+				timeNow = timeNow.Add(duration - time.Since(timeNow))
 				test.SaveTest(db)
-			}
-			if os.Getenv("TEST_MODE") == "on" {
-				timeNow = time.Now()
 			}
 			evaluator.Rescale(ciphertextBuyerBill, params.DefaultScale(), ciphertextBuyerBill)
 			if os.Getenv("TEST_MODE") == "on" {
@@ -423,7 +418,9 @@ func (p *Transact) EncOutputFromMeta(db *gorm.DB, meta TransactMetaParams, secre
 				test.Function = "EncOutputFromMeta"
 				test.Operation = "Rescaling"
 				test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-				test.Time = duration.Seconds() * 1000000
+				test.Time = float64(duration.Nanoseconds())
+				test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+				timeNow = timeNow.Add(duration - time.Since(timeNow))
 				test.SaveTest(db)
 			}
 		}
@@ -431,9 +428,6 @@ func (p *Transact) EncOutputFromMeta(db *gorm.DB, meta TransactMetaParams, secre
 
 	if meta.Discount.FixedCut > 0.0 {
 		//fmt.Println(float64(meta.Discount.FixedCut)*(-1.00))
-		if os.Getenv("TEST_MODE") == "on" {
-			timeNow = time.Now()
-		}
 		evaluator.AddConst(ciphertextBuyerBill, float64(meta.Discount.FixedCut)*(-1.00), ciphertextBuyerBill)
 		if os.Getenv("TEST_MODE") == "on" {
 			duration = time.Since(timeNow)
@@ -441,10 +435,10 @@ func (p *Transact) EncOutputFromMeta(db *gorm.DB, meta TransactMetaParams, secre
 			test.Function = "EncOutputFromMeta"
 			test.Operation = "AddConst"
 			test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-			test.Time = duration.Seconds() * 1000000
-		}
-		if os.Getenv("TEST_MODE") == "on" {
-			timeNow = time.Now()
+			test.Time = float64(duration.Nanoseconds())
+			test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+			timeNow = timeNow.Add(duration - time.Since(timeNow))
+			test.SaveTest(db)
 		}
 		evaluator.Rescale(ciphertextBuyerBill, params.DefaultScale(), ciphertextBuyerBill)
 		if os.Getenv("TEST_MODE") == "on" {
@@ -453,7 +447,9 @@ func (p *Transact) EncOutputFromMeta(db *gorm.DB, meta TransactMetaParams, secre
 			test.Function = "EncOutputFromMeta"
 			test.Operation = "Rescaling"
 			test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-			test.Time = duration.Seconds() * 1000000
+			test.Time = float64(duration.Nanoseconds())
+			test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+			timeNow = timeNow.Add(duration - time.Since(timeNow))
 			test.SaveTest(db)
 		}
 	}
@@ -507,7 +503,7 @@ func (p *Transact) EncOutputFromMeta(db *gorm.DB, meta TransactMetaParams, secre
 
 func (p *Transact) EncOutputFromMetaBootstrap(db *gorm.DB, meta TransactMetaParams, secretKey string) (string, string) {
 	var duration time.Duration
-	var timeNow time.Time
+	timeNow := time.Now()
 	paramLogsGlobalBuyerMeta := 3
 	paramLogsGlobalBuyerBill := 1
 
@@ -575,9 +571,6 @@ func (p *Transact) EncOutputFromMetaBootstrap(db *gorm.DB, meta TransactMetaPara
 
 	if meta.Discount.PercentCut > 0.0 {
 		if meta.Discount.Wholy == "true" {
-			if os.Getenv("TEST_MODE") == "on" {
-				timeNow = time.Now()
-			}
 			evaluator.MultByConst(ciphertextBuyerBill, meta.Discount.PercentCut, ciphertextBuyerBill)
 			if os.Getenv("TEST_MODE") == "on" {
 				duration = time.Since(timeNow)
@@ -585,11 +578,10 @@ func (p *Transact) EncOutputFromMetaBootstrap(db *gorm.DB, meta TransactMetaPara
 				test.Function = "EncOutputFromMetaBootstrap"
 				test.Operation = "MultConst"
 				test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-				test.Time = duration.Seconds() * 1000000
+				test.Time = float64(duration.Nanoseconds())
+				test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+				timeNow = timeNow.Add(duration - time.Since(timeNow))
 				test.SaveTest(db)
-			}
-			if os.Getenv("TEST_MODE") == "on" {
-				timeNow = time.Now()
 			}
 			evaluator.Rescale(ciphertextBuyerBill, params.DefaultScale(), ciphertextBuyerBill)
 			if os.Getenv("TEST_MODE") == "on" {
@@ -598,13 +590,12 @@ func (p *Transact) EncOutputFromMetaBootstrap(db *gorm.DB, meta TransactMetaPara
 				test.Function = "EncOutputFromMetaBootstrap"
 				test.Operation = "Rescaling"
 				test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-				test.Time = duration.Seconds() * 1000000
+				test.Time = float64(duration.Nanoseconds())
+				test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+				timeNow = timeNow.Add(duration - time.Since(timeNow))
 				test.SaveTest(db)
 			}
 		} else {
-			if os.Getenv("TEST_MODE") == "on" {
-				timeNow = time.Now()
-			}
 			evaluator.AddConst(ciphertextBuyerBill, buyerBill[0]*meta.Discount.PercentCut*(-1.00), ciphertextBuyerBill)
 			if os.Getenv("TEST_MODE") == "on" {
 				duration = time.Since(timeNow)
@@ -612,11 +603,10 @@ func (p *Transact) EncOutputFromMetaBootstrap(db *gorm.DB, meta TransactMetaPara
 				test.Function = "EncOutputFromMetaBootstrap"
 				test.Operation = "AddConst"
 				test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-				test.Time = duration.Seconds() * 1000000
+				test.Time = float64(duration.Nanoseconds())
+				test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+				timeNow = timeNow.Add(duration - time.Since(timeNow))
 				test.SaveTest(db)
-			}
-			if os.Getenv("TEST_MODE") == "on" {
-				timeNow = time.Now()
 			}
 			evaluator.Rescale(ciphertextBuyerBill, params.DefaultScale(), ciphertextBuyerBill)
 			if os.Getenv("TEST_MODE") == "on" {
@@ -625,7 +615,9 @@ func (p *Transact) EncOutputFromMetaBootstrap(db *gorm.DB, meta TransactMetaPara
 				test.Function = "EncOutputFromMetaBootstrap"
 				test.Operation = "Rescaling"
 				test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-				test.Time = duration.Seconds() * 1000000
+				test.Time = float64(duration.Nanoseconds())
+				test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+				timeNow = timeNow.Add(duration - time.Since(timeNow))
 				test.SaveTest(db)
 			}
 		}
@@ -633,9 +625,6 @@ func (p *Transact) EncOutputFromMetaBootstrap(db *gorm.DB, meta TransactMetaPara
 
 	if meta.Discount.FixedCut > 0.0 {
 		//fmt.Println(float64(meta.Discount.FixedCut)*(-1.00))
-		if os.Getenv("TEST_MODE") == "on" {
-			timeNow = time.Now()
-		}
 		evaluator.AddConst(ciphertextBuyerBill, float64(meta.Discount.FixedCut)*(-1.00), ciphertextBuyerBill)
 		if os.Getenv("TEST_MODE") == "on" {
 			duration = time.Since(timeNow)
@@ -643,10 +632,10 @@ func (p *Transact) EncOutputFromMetaBootstrap(db *gorm.DB, meta TransactMetaPara
 			test.Function = "EncOutputFromMetaBootstrap"
 			test.Operation = "AddConst"
 			test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-			test.Time = duration.Seconds() * 1000000
-		}
-		if os.Getenv("TEST_MODE") == "on" {
-			timeNow = time.Now()
+			test.Time = float64(duration.Nanoseconds())
+			test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+			timeNow = timeNow.Add(duration - time.Since(timeNow))
+			test.SaveTest(db)
 		}
 		evaluator.Rescale(ciphertextBuyerBill, params.DefaultScale(), ciphertextBuyerBill)
 		if os.Getenv("TEST_MODE") == "on" {
@@ -655,15 +644,14 @@ func (p *Transact) EncOutputFromMetaBootstrap(db *gorm.DB, meta TransactMetaPara
 			test.Function = "EncOutputFromMetaBootstrap"
 			test.Operation = "Rescaling"
 			test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-			test.Time = duration.Seconds() * 1000000
+			test.Time = float64(duration.Nanoseconds())
+			test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+			timeNow = timeNow.Add(duration - time.Since(timeNow))
 			test.SaveTest(db)
 		}
 	}
 
 	evaluator.SetScale(ciphertextBuyerBill, params.DefaultScale())
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
-	}
 	btp.Bootstrapp(ciphertextBuyerBill)
 	if os.Getenv("TEST_MODE") == "on" {
 		duration = time.Since(timeNow)
@@ -671,7 +659,9 @@ func (p *Transact) EncOutputFromMetaBootstrap(db *gorm.DB, meta TransactMetaPara
 		test.Function = "EncOutputFromMetaBootstrap"
 		test.Operation = "Bootstrapp"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(ciphertextBuyerBill))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
 	}
 
@@ -746,7 +736,7 @@ func (p *Transact) EncOutputFromMetaWithoutHE(meta TransactMetaParams) (string, 
 
 func Secrecy(db *gorm.DB) string {
 	var duration time.Duration
-	var timeNow time.Time
+	timeNow := time.Now()
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
 	if config.GetConfig().GetBootstrappingMode() == "on" {
 		paramSet := BootstrapEncParams
@@ -756,17 +746,16 @@ func Secrecy(db *gorm.DB) string {
 		panic(err)
 	}
 
-	if os.Getenv("TEST_MODE") == "on" {
-		timeNow = time.Now()
-	}
 	sk := ckks.NewSecretKey(params)
 	if os.Getenv("TEST_MODE") == "on" {
-		duration = time.Since(timeNow)
 		test := Test{}
 		test.Function = "Secrecy"
 		test.Operation = "Secret Key"
 		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
-		test.Time = duration.Seconds() * 1000000
+		duration = time.Since(timeNow) - duration
+		test.Time = float64(duration.Nanoseconds())
+		test.Size = float64(unsafe.Sizeof(sk))
+		timeNow = timeNow.Add(duration - time.Since(timeNow))
 		test.SaveTest(db)
 	}
 	skStr := MarshalToBase64String(sk)

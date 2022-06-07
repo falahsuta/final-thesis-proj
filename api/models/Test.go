@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"finalthesisproject/api/config"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -13,6 +14,7 @@ type Test struct {
 	Operation string    `gorm:"size:255;not null" json:"operation"`
 	Scheme    string    `gorm:"size:255;not null" json:"scheme"`
 	Time      float64   `gorm:"not null" json:"time"`
+	Size      float64   `gorm:"not null" json:"size"`
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
@@ -39,6 +41,10 @@ func (t *Test) Validate() error {
 }
 
 func (t *Test) SaveTest(db *gorm.DB) (*Test, error) {
+
+	if config.GetConfig().GetNTTMode() != "on" {
+		t.Operation += " Non NTT"
+	}
 	err := db.Debug().Model(&Test{}).Create(&t).Error
 
 	if err != nil {
@@ -53,6 +59,16 @@ func (t *Test) FindAllTest(db *gorm.DB) (*[]Test, error) {
 	err := db.Debug().Model(&Test{}).Limit(100).Find(&test).Error
 	if err != nil {
 		return &[]Test{}, err
+	}
+
+	return &test, nil
+}
+
+func (t *Test) FindAverageSpesificTest(db *gorm.DB) (*Test, error) {
+	test := Test{}
+	err := db.Debug().Model(&Test{}).Select("function, operation, scheme, AVG(time) as time, AVG(size) as size").Where(t).Group("function, operation, scheme").First(&test).Error
+	if err != nil {
+		return nil, err
 	}
 
 	return &test, nil

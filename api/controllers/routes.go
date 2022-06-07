@@ -69,5 +69,6 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/transacts/{id}", middlewares.SetMiddlewareAuthentication(s.DeleteTransact)).Methods("DELETE")
 
 	s.Router.HandleFunc("/ckks", middlewares.SetMiddlewareJSON(s.CountQT)).Methods("POST")
+	s.Router.HandleFunc("/test", middlewares.SetMiddlewareJSON(s.SpesificAverageTest)).Methods("GET")
 
 }
