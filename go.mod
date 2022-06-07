@@ -1,5 +1,6 @@
 module finalthesisproject
 
+// +heroku goVersion go1.13.0
 go 1.13
 
 require (
