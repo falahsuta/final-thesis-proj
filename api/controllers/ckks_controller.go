@@ -7,15 +7,16 @@ import (
 	"finalthesisproject/api/models"
 	"finalthesisproject/api/responses"
 	"fmt"
-	"github.com/tuneinsight/lattigo/v3/ckks"
-	"github.com/tuneinsight/lattigo/v3/ring"
-	"github.com/tuneinsight/lattigo/v3/rlwe"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/tuneinsight/lattigo/v3/ckks"
+	"github.com/tuneinsight/lattigo/v3/ring"
+	"github.com/tuneinsight/lattigo/v3/rlwe"
 )
 
 func (server *Server) CountQT(w http.ResponseWriter, r *http.Request) {
@@ -108,10 +109,10 @@ var GlobalEncParams = ckks.ParametersLiteral{
 	RingType:     ring.Standard,
 }
 
-func generate(degree int)  ckks.ParametersLiteral {
+func generate(degree int) ckks.ParametersLiteral {
 	var cek = ckks.ParametersLiteral{
 		LogN:     degree,
-		LogSlots: degree-1,
+		LogSlots: degree - 1,
 		Q: []uint64{0x1fffec001, // 33 + 5 x 30
 			0x3fff4001,
 			0x3ffe8001,
@@ -143,8 +144,6 @@ func ea(opsFloat models.OpsFloat1) {
 		panic(err)
 	}
 
-
-
 	// Keys
 	kgen := ckks.NewKeyGenerator(params)
 	sk, pk := kgen.GenKeyPair()
@@ -167,7 +166,6 @@ func ea(opsFloat models.OpsFloat1) {
 	values := make([]float64, paramLOGS)
 	values[0] = opsFloat.Pt1
 
-
 	// ENCODE
 	startEncode := time.Now()
 	encoder := ckks.NewEncoder(params)
@@ -181,18 +179,15 @@ func ea(opsFloat models.OpsFloat1) {
 	durationEncrypt := time.Since(startEncrypt)
 	fmt.Println("[LOG] Encrypt: ", durationEncrypt)
 
-
 	startMult := time.Now()
 	evaluator.MultByConst(ciphertext, opsFloat.Constant, ciphertext)
 	durationMult := time.Since(startMult)
 	fmt.Println("[LOG] Mult: ", durationMult)
 
-
 	startAdd := time.Now()
 	evaluator.AddConst(ciphertext, 50000, ciphertext)
 	durationAdd := time.Since(startAdd)
 	fmt.Println("[LOG] Add: ", durationAdd)
-
 
 	emp := MarshalToBase64String(ciphertext)
 	fmt.Println("Size In Bytes:", len(emp))
@@ -219,10 +214,8 @@ func ea(opsFloat models.OpsFloat1) {
 	fmt.Printf("ValuesTest: %.3f ...\n", valuesTest[0])
 }
 
-
 func multiConst(skStr string, value float64, constant float64, degree int) {
 	paramLogs := 1
-
 
 	fmt.Println("DEGREE: ", degree)
 
@@ -247,7 +240,6 @@ func multiConst(skStr string, value float64, constant float64, degree int) {
 	values := make([]float64, paramLogs)
 	values[0] = value
 
-
 	// ENCODE
 	startEncode := time.Now()
 	encoder := ckks.NewEncoder(params)
@@ -255,14 +247,12 @@ func multiConst(skStr string, value float64, constant float64, degree int) {
 	durationEncode := time.Since(startEncode)
 	fmt.Println("[LOG] Encode: ", durationEncode)
 
-
 	startEncrypt := time.Now()
 	var ciphertext *ckks.Ciphertext
 	ciphertext = encryptor.EncryptNew(plaintext)
 
 	durationEncrypt := time.Since(startEncrypt)
 	fmt.Println("[LOG] Encrypt: ", durationEncrypt)
-
 
 	startMult := time.Now()
 	// Evaluator
@@ -296,7 +286,6 @@ func multiConst(skStr string, value float64, constant float64, degree int) {
 	decrypt := decryptor.DecryptNew(ciphertext)
 	durationDecrypt := time.Since(startDecrypt)
 	fmt.Println("[LOG] Decrypt: ", durationDecrypt)
-
 
 	startDecode := time.Now()
 	tmp := encoder.Decode(decrypt, paramLogs)
@@ -364,7 +353,6 @@ func multiCP(skStr string, value float64, constant float64) {
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
 
-
 	evaluator.Mul(ciphertext, ciphertext2, ciphertext)
 
 	emp := MarshalToBase64String(ciphertext)
@@ -377,7 +365,6 @@ func multiCP(skStr string, value float64, constant float64) {
 	}
 
 	defer f.Close()
-
 
 	data := []byte(emp)
 
@@ -400,8 +387,6 @@ func multiCP(skStr string, value float64, constant float64) {
 	//fmt.Println("CEPE")
 	//fmt.Println(int64(5))
 }
-
-
 
 // UnmarshalFromBase64 reads a base-64 string into a unmarshallable type
 func UnmarshalFromBase64(bum encoding.BinaryUnmarshaler, b64string string) error {

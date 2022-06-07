@@ -2,8 +2,8 @@ import http from 'k6/http'
 import { sleep, check } from 'k6'
 import { Rate, Trend } from 'k6/metrics'
 
-const lowerThan2sRate = new Rate('lower_than_2s')
-const durationInSeconds = new Trend('duration_in_seconds')
+const lowerThan5mRate = new Rate('lower_than_5m')
+const durationInMicroSecond = new Trend('duration_in_microsecond')
 
 // This BASE_URL won't work if you' using Docker.
 // You'll need to know the IP address of the host.
@@ -12,13 +12,9 @@ const BASE_URL = 'http://localhost:8080'
 
 export const options = {
     vus: 1,
-    duration: '3s',
-    thresholds: {
-        lower_than_2s: [{
-            threshold: 'rate>0.75',
-            abortOnFail: true,
-        }],
-    }
+    duration: '30m',
+    summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(95)', 'p(99)', 'count'],
+    // setupTimeout: "30m",
 }
 
 export function setup() {
@@ -64,27 +60,30 @@ export default function(data) {
     // const res = http.get(`${BASE_URL}/mybalances/check`, data.params)
 
     let transPayload = {
-        "author_id": 1,
-        "product_id": 1,
-        "qty": 2,
-        "disc_name": "DISCOUNT30"
+        "added_balance": 30000.0
     }
+    // {
+    //     "author_id": 1,
+    //     "product_id": 1,
+    //     "qty": 2,
+    //     "disc_name": "DISCOUNT30"
+    // }
 
     // console.log(transPayload)
     // console.log(data.params.toString())
 
-    const res = http.post(`${BASE_URL}/transacts`, JSON.stringify(transPayload), data.params)
+    const res = http.post(`${BASE_URL}/mybalances/topup`, JSON.stringify(transPayload), data.params)
 
     // console.log("Ea")
     // console.log(res.body)
 
     check(res, {
-        'is success': (r) => r.json().success,
-        'duration below 2s': r => r.timings.duration < 2000
+        'is status 200': (r) => r.status === 201
+        // 'duration below 2s': r => r.timings.duration < 2000
     })
 
-    lowerThan2sRate.add(res.timings.duration < 2000)
-    durationInSeconds.add(res.timings.duration / 1000)
+    lowerThan5mRate.add(res.timings.duration < 5000)
+    durationInMicroSecond.add(res.timings.duration * 1000 )
 
 
 

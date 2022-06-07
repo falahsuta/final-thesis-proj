@@ -176,11 +176,11 @@ var tags = []models.Tag{
 
 func Load(db *gorm.DB) {
 
-	err := db.Debug().DropTableIfExists(&models.Post{}, &models.User{}, &models.Item{}, &models.Tag{}, &models.Balance{}, &models.Discount{}, &models.Transact{}).Error
+	err := db.Debug().DropTableIfExists(&models.Post{}, &models.User{}, &models.Item{}, &models.Tag{}, &models.Balance{}, &models.Discount{}, &models.Transact{}, &models.Test{}).Error
 	if err != nil {
 		log.Fatalf("cannot drop table: %v", err)
 	}
-	err = db.Debug().AutoMigrate(&models.User{}, &models.Post{}, &models.Item{}, &models.Tag{}, &models.Balance{}, &models.Discount{}, &models.Transact{}).Error
+	err = db.Debug().AutoMigrate(&models.User{}, &models.Post{}, &models.Item{}, &models.Tag{}, &models.Balance{}, &models.Discount{}, &models.Transact{}, &models.Test{}).Error
 	if err != nil {
 		log.Fatalf("cannot migrate table: %v", err)
 	}

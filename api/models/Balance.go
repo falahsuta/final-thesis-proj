@@ -52,9 +52,9 @@ func (p *Balance) StartAndUpdate(db *gorm.DB, uid uint32) {
 	//start := time.Now()
 
 	if config.GetConfig().GetBootstrappingMode() == "on" {
-		p.CurrentBalance = p.EncOutputFromZeroBalanceBootstrap(user.SecretKey)
+		p.CurrentBalance = p.EncOutputFromZeroBalanceBootstrap(db, user.SecretKey)
 	} else {
-		p.CurrentBalance = p.EncOutputFromZeroBalance(user.SecretKey)
+		p.CurrentBalance = p.EncOutputFromZeroBalance(db, user.SecretKey)
 	}
 
 	//duration := time.Since(start)
@@ -155,7 +155,9 @@ func (p *Balance) FindAllBalances(db *gorm.DB) (*[]Balance, error) {
 	return &balances, nil
 }
 
-func (p *Balance) EncOutputFromZeroBalance(secretKey string) string {
+func (p *Balance) EncOutputFromZeroBalance(db *gorm.DB, secretKey string) string {
+	var duration time.Duration
+	var timeNow time.Time
 	paramLogsGlobalBalance := 1
 
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
@@ -186,7 +188,20 @@ func (p *Balance) EncOutputFromZeroBalance(secretKey string) string {
 	encoder := ckks.NewEncoder(params)
 
 	// Plaintext Generation
+	if os.Getenv("TEST_MODE") == "on" {
+		timeNow = time.Now()
+	}
 	plaintext := encoder.EncodeNew(buyerMeta, params.MaxLevel(), params.DefaultScale(), paramLogsGlobalBalance)
+	if os.Getenv("TEST_MODE") == "on" {
+		duration = time.Since(timeNow)
+		fmt.Println(duration)
+		test := Test{}
+		test.Function = "EncOutputFromZeroBalance"
+		test.Operation = "Encoding"
+		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
+		test.Time = duration.Seconds() * 1000000
+		test.SaveTest(db)
+	}
 
 	// Cipher Text Operation
 	var ciphertext *ckks.Ciphertext
@@ -194,7 +209,19 @@ func (p *Balance) EncOutputFromZeroBalance(secretKey string) string {
 
 	str1 := MarshalToBase64String(ciphertext)
 
+	if os.Getenv("TEST_MODE") == "on" {
+		timeNow = time.Now()
+	}
 	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
+	if os.Getenv("TEST_MODE") == "on" {
+		duration = time.Since(timeNow)
+		test := Test{}
+		test.Function = "EncOutputFromZeroBalance"
+		test.Operation = "Decoding"
+		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
+		test.Time = duration.Seconds() * 1000000
+		test.SaveTest(db)
+	}
 
 	// Value Assignment from Decryption
 	valuesTest := make([]float64, len(tmp))
@@ -207,7 +234,9 @@ func (p *Balance) EncOutputFromZeroBalance(secretKey string) string {
 	return str1
 }
 
-func (p *Balance) EncOutputFromZeroBalanceBootstrap(secretKey string) string {
+func (p *Balance) EncOutputFromZeroBalanceBootstrap(db *gorm.DB, secretKey string) string {
+	var duration time.Duration
+	var timeNow time.Time
 	paramLogsGlobalBalance := 1
 
 	paramSet := BootstrapEncParams
@@ -238,14 +267,38 @@ func (p *Balance) EncOutputFromZeroBalanceBootstrap(secretKey string) string {
 	encoder := ckks.NewEncoder(params)
 
 	// Plaintext Generation
+	if os.Getenv("TEST_MODE") == "on" {
+		timeNow = time.Now()
+	}
 	plaintext := encoder.EncodeNew(buyerMeta, params.MaxLevel(), params.DefaultScale(), paramLogsGlobalBalance)
+	if os.Getenv("TEST_MODE") == "on" {
+		duration = time.Since(timeNow)
+		test := Test{}
+		test.Function = "EncOutputFromZeroBalanceBootstrap"
+		test.Operation = "Encoding"
+		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
+		test.Time = duration.Seconds() * 1000000
+		test.SaveTest(db)
+	}
 
 	// Cipher Text Operation
 	ciphertext := encryptor.EncryptNew(plaintext)
 
 	str1 := MarshalToBase64String(ciphertext)
 
+	if os.Getenv("TEST_MODE") == "on" {
+		timeNow = time.Now()
+	}
 	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
+	if os.Getenv("TEST_MODE") == "on" {
+		duration = time.Since(timeNow)
+		test := Test{}
+		test.Function = "EncOutputFromZeroBalanceBootstrap"
+		test.Operation = "Decoding"
+		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
+		test.Time = duration.Seconds() * 1000000
+		test.SaveTest(db)
+	}
 
 	// Value Assignment from Decryption
 	valuesTest := make([]float64, len(tmp))
@@ -260,6 +313,8 @@ func (p *Balance) EncOutputFromZeroBalanceBootstrap(secretKey string) string {
 
 func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, myBalance *Balance) *Balance {
 	// paramLogsGlobalBalance := 1
+	var duration time.Duration
+	var timeNow time.Time
 	params, err := ckks.NewParametersFromLiteral(GlobalEncParams)
 
 	user := User{}
@@ -299,7 +354,32 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, rlwe.EvaluationKey{Rlk: rlk})
+	if os.Getenv("TEST_MODE") == "on" {
+		timeNow = time.Now()
+	}
 	evaluator.AddConst(ciphertext, addedConstant, ciphertext)
+	if os.Getenv("TEST_MODE") == "on" {
+		duration = time.Since(timeNow)
+		test := Test{}
+		test.Function = "ProcessTopup"
+		test.Operation = "AddConst"
+		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
+		test.Time = duration.Seconds() * 1000000
+		test.SaveTest(db)
+	}
+	if os.Getenv("TEST_MODE") == "on" {
+		timeNow = time.Now()
+	}
+	evaluator.Rescale(ciphertext, params.DefaultScale(), ciphertext)
+	if os.Getenv("TEST_MODE") == "on" {
+		duration = time.Since(timeNow)
+		test := Test{}
+		test.Function = "ProcessTopup"
+		test.Operation = "Rescaling"
+		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
+		test.Time = duration.Seconds() * 1000000
+		test.SaveTest(db)
+	}
 
 	// Encoder
 	// encoder := ckks.NewEncoder(params)
@@ -329,7 +409,9 @@ func (p *Balance) ProcessTopUp(db *gorm.DB, addedConstant float64, uid uint32, m
 }
 
 func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid uint32, myBalance *Balance) *Balance {
-	paramLogsGlobalBalance := 1
+	var duration time.Duration
+	var timeNow time.Time
+	// paramLogsGlobalBalance := 1
 
 	user := User{}
 	user.FindUserByID(db, uid)
@@ -358,42 +440,79 @@ func (p *Balance) ProcessTopUpBootstrap(db *gorm.DB, addedConstant float64, uid 
 	UnmarshalFromBase64(ciphertext, myBalance.CurrentBalance)
 
 	// Decryptor
-	decryptor := ckks.NewDecryptor(params, sk)
+	// decryptor := ckks.NewDecryptor(params, sk)
 
 	// Before Value Assignment from Decryption
-	encoder := ckks.NewEncoder(params)
-	tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
-	valuesTest := make([]float64, len(tmp))
-	for i := range tmp {
-		valuesTest[i] = real(tmp[i])
-	}
+	// encoder := ckks.NewEncoder(params)
+	// tmp := encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
+	// valuesTest := make([]float64, len(tmp))
+	// for i := range tmp {
+	// 	valuesTest[i] = real(tmp[i])
+	// }
 
-	f, _ := os.Create("./data5.txt")
-	defer f.Close()
-	s := fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
-	_, _ = f.WriteString(s)
+	// f, _ := os.Create("./data5.txt")
+	// defer f.Close()
+	// s := fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
+	// _, _ = f.WriteString(s)
 
 	// Evaluator
 	evaluator := ckks.NewEvaluator(params, evk.EvaluationKey)
+	if os.Getenv("TEST_MODE") == "on" {
+		timeNow = time.Now()
+	}
 	evaluator.AddConst(ciphertext, addedConstant, ciphertext)
-
-	// Encoder
-	tmp = encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
-
-	// After Value Assignment from Decryption
-	valuesTest = make([]float64, len(tmp))
-	for i := range tmp {
-		valuesTest[i] = real(tmp[i])
+	if os.Getenv("TEST_MODE") == "on" {
+		duration = time.Since(timeNow)
+		test := Test{}
+		test.Function = "ProcessTopupBootstrap"
+		test.Operation = "AddConst"
+		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
+		test.Time = duration.Seconds() * 1000000
+		test.SaveTest(db)
+	}
+	if os.Getenv("TEST_MODE") == "on" {
+		timeNow = time.Now()
+	}
+	evaluator.Rescale(ciphertext, params.DefaultScale(), ciphertext)
+	if os.Getenv("TEST_MODE") == "on" {
+		duration = time.Since(timeNow)
+		test := Test{}
+		test.Function = "ProcessTopupBootstrap"
+		test.Operation = "Rescaling"
+		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
+		test.Time = duration.Seconds() * 1000000
+		test.SaveTest(db)
 	}
 
-	f, _ = os.Create("./data6.txt")
-	s = fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
-	_, _ = f.WriteString(s)
+	// // Encoder
+	// tmp = encoder.Decode(decryptor.DecryptNew(ciphertext), paramLogsGlobalBalance)
+
+	// After Value Assignment from Decryption
+	// valuesTest = make([]float64, len(tmp))
+	// for i := range tmp {
+	// 	valuesTest[i] = real(tmp[i])
+	// }
+
+	// f, _ = os.Create("./data6.txt")
+	// s = fmt.Sprintf("ValuesTest: %.3f ...\n", valuesTest[0])
+	// _, _ = f.WriteString(s)
 
 	// fmt.Println("ValuesTest: %.3f ...\n", valuesTest[0])
 
 	evaluator.SetScale(ciphertext, params.DefaultScale())
-	_ = btp.Bootstrapp(ciphertext)
+	if os.Getenv("TEST_MODE") == "on" {
+		timeNow = time.Now()
+	}
+	btp.Bootstrapp(ciphertext)
+	if os.Getenv("TEST_MODE") == "on" {
+		duration = time.Since(timeNow)
+		test := Test{}
+		test.Function = "ProcessTopupBootstrap"
+		test.Operation = "Bootstrapping"
+		test.Scheme = fmt.Sprintf("N%dQ%d", params.LogN(), params.LogQ())
+		test.Time = duration.Seconds() * 1000000
+		test.SaveTest(db)
+	}
 
 	// After Value Assignment from Decryption Bootstrap
 	// tmp = encoder.Decode(decryptor.DecryptNew(ciphertextBootstrap), paramLogsGlobalBalance)
