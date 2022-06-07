@@ -3,7 +3,6 @@ module finalthesisproject
 go 1.13
 
 require (
-	cloud.google.com/go v0.37.4 // indirect
 	github.com/badoux/checkmail v1.2.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/felixge/httpsnoop v1.0.3 // indirect
@@ -17,6 +16,4 @@ require (
 	github.com/tuneinsight/lattigo/v3 v3.0.4
 	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122
 	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
-	gopkg.in/yaml.v2 v2.2.2 // indirect
 )
