@@ -746,7 +746,9 @@ func Secrecy(db *gorm.DB) string {
 		panic(err)
 	}
 
-	sk := ckks.NewSecretKey(params)
+	kgen := ckks.NewKeyGenerator(params)
+	sk := kgen.GenSecretKey()
+
 	if os.Getenv("TEST_MODE") == "on" {
 		test := Test{}
 		test.Function = "Secrecy"
